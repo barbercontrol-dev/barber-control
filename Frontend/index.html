@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BarberControl - Login</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div class="login-wrapper">
+      <div class="login-brand">
+        <div class="brand-logo">
+          <div class="logo-text">
+            <strong>BarberControl</strong>
+            <span>Sistema de gestão para barbearias</span>
+          </div>
+        </div>
+
+        <div class="brand-headline">
+          <h1>Gestão inteligente para sua barbearia.</h1>
+          <p>
+            Centralize sua agenda, serviços, clientes e financeiro em uma única
+            plataforma.
+          </p>
+        </div>
+      </div>
+
+      <div class="login-panel">
+        <h2>Entrar</h2>
+        <p>Acesse o painel da sua barbearia</p>
+
+        <div class="form-error" id="erro-login">Email ou senha incorretos.</div>
+
+        <form id="form-login">
+          <div class="field">
+            <label for="email">E-MAIL</label>
+            <input
+              type="email"
+              id="email"
+              placeholder="voce@barberia.com"
+              required
+            />
+          </div>
+
+          <div class="field password-field">
+            <label for="senha">SENHA</label>
+            <input type="password" id="senha" placeholder="••••••••" required />
+            <button type="button" class="toggle-visibility" id="toggle-senha">
+              👁
+            </button>
+          </div>
+
+          <div class="login-options">
+            <label class="remember-me">
+              <input type="checkbox" id="lembrar-me" />
+              Lembrar de mim
+            </label>
+            <a href="#">Esqueci a senha</a>
+          </div>
+
+          <button type="submit" class="btn-primary" id="btn-entrar">
+            Entrar
+          </button>
+        </form>
+
+        <div class="login-footer">
+          Não tem uma conta? <a href="#">Fale com o administrador</a>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/login.js"></script>
+  </body>
+</html>

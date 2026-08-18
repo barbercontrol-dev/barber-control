@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -19,6 +20,9 @@ public class UsuarioService {
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
     // Cadastra um novo usuário, criptografa a senha e define a role como ADMIN
+    public List<Usuario> listarTodos(){
+        return usuarioRepository.findAll();
+    }
 
     public Usuario cadastrar(Usuario usuario) {
         usuario.setSenha(encoder.encode(usuario.getSenha()));

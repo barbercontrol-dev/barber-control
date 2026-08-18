@@ -3,7 +3,12 @@ package com.barbearia.agendamento.controller;
 import com.barbearia.agendamento.model.Usuario;
 import com.barbearia.agendamento.security.JwtUtil;
 import com.barbearia.agendamento.service.UsuarioService;
+
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,16 +30,15 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public String login(@RequestBody Usuario usuario) {
+    public ResponseEntity<?> login(@RequestBody Usuario usuario) {
         var usuarioOpt = usuarioService.buscarPorEmail(usuario.getEmail());
 
-        if (usuarioOpt.isPresent()) {
-            if (usuarioService.validarSenha(usuario.getSenha(), usuarioOpt.get().getSenha())) {
-                String token = jwtUtil.generateToken(usuarioOpt.get().getEmail());
-                return "Token: " + token;
-            }
+        if (usuarioOpt.isPresent() && usuarioService.validarSenha(usuario.getSenha(), usuarioOpt.get().getSenha())) {
+            String token = jwtUtil.generateToken(usuarioOpt.get().getEmail());
+            return ResponseEntity.ok(Map.of("token", token));
         }
-        return "Credenciais inválidas";
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("erro", "Credenciais inválidas"));
     }
 
 }
