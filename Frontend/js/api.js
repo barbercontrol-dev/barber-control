@@ -18,7 +18,7 @@ async function apiLogin(email, senha) {
 async function apiFetch(endpoint, options = {}) {
   const token = localStorage.getItem("token");
   if (!token) {
-    window.location.href = "index.html";
+    window.location.href = "login.html";
     return null;
   }
 
@@ -33,7 +33,7 @@ async function apiFetch(endpoint, options = {}) {
 
   if (response.status === 401 || response.status === 403) {
     localStorage.removeItem("token");
-    window.location.href = "index.html";
+    window.location.href = "login.html";
     return null;
   }
 
