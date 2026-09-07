@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>BarberControl - Login</title>
+    <title>BarberControl - Cadastro</title>
     <style>
       :root {
         --color-primary: #ffc107;
@@ -270,7 +270,22 @@
           <p>Seja bem vindo(a)!</p>
         </div>
 
-        <form id="form-login">
+        <form id="form-cadastro">
+          <div class="field">
+            <label for="nome"
+              >Nome completo <span class="required">*</span></label
+            >
+            <div class="input-wrap">
+              <input
+                type="text"
+                id="nome"
+                name="nome"
+                autocomplete="name"
+                required
+              />
+            </div>
+          </div>
+
           <div class="field">
             <label for="email">👤 Email <span class="required">*</span></label>
             <div class="input-wrap">
@@ -279,7 +294,9 @@
           </div>
 
           <div class="field">
-            <label for="senha">Senha <span class="required">*</span></label>
+            <label for="senha"
+              >Criar senha <span class="required">*</span></label
+            >
             <div class="input-wrap">
               <input type="password" id="senha" name="senha" required />
               <button
@@ -318,9 +335,56 @@
             </div>
           </div>
 
+          <div class="field">
+            <label for="repetir-senha"
+              >Repetir senha <span class="required">*</span></label
+            >
+            <div class="input-wrap">
+              <input
+                type="password"
+                id="repetir-senha"
+                name="repetir-senha"
+                required
+              />
+              <button
+                type="button"
+                class="toggle-visibility"
+                data-target="repetir-senha"
+                aria-label="Mostrar senha"
+              >
+                <svg
+                  class="icon-on"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                <svg
+                  class="icon-off"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a20.6 20.6 0 0 1 5.06-5.94M9.9 4.24A10.6 10.6 0 0 1 12 4c7 0 11 7 11 7a20.6 20.6 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+                  ></path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+              </button>
+            </div>
+          </div>
+
           <p id="form-erro" role="alert" aria-live="polite"></p>
-          <button type="submit" class="submit-btn" id="btn-entrar">
-            Entrar
+          <button type="submit" class="submit-btn" id="btn-cadastrar">
+            Cadastrar
           </button>
         </form>
       </div>
@@ -334,6 +398,6 @@
     </div>
 
     <script src="js/api.js"></script>
-    <script src="js/login.js"></script>
+    <script src="js/cadastro.js"></script>
   </body>
 </html>

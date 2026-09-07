@@ -1,19 +1,12 @@
 const form = document.getElementById("form-login");
 const erroEl = document.getElementById("form-erro");
 const btnEntrar = document.getElementById("btn-entrar");
-const togglePass = document.getElementById("toggle-pass");
 const inputSenha = document.getElementById("senha");
 
 // Se já tiver um token salvo, pula direto pra tela principal
 if (localStorage.getItem("token")) {
   window.location.href = "index.html";
 }
-
-// Botão do olho: mostra/oculta a senha digitada
-togglePass.addEventListener("click", () => {
-  const visivel = inputSenha.type === "text";
-  inputSenha.type = visivel ? "password" : "text";
-});
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -36,4 +29,17 @@ form.addEventListener("submit", async (e) => {
     btnEntrar.disabled = false;
     btnEntrar.textContent = "Entrar";
   }
+});
+
+document.querySelectorAll(".toggle-visibility").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const input = document.getElementById(btn.dataset.target);
+    const isPassword = input.type === "password";
+    input.type = isPassword ? "text" : "password";
+    btn.classList.toggle("is-visible", isPassword);
+    btn.setAttribute(
+      "aria-label",
+      isPassword ? "Ocultar senha" : "Mostrar senha",
+    );
+  });
 });

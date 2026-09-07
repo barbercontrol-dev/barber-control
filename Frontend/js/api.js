@@ -14,6 +14,20 @@ async function apiLogin(email, senha) {
   return response.json();
 }
 
+async function apiRegistrar(nome, email, senha) {
+  const response = await fetch(`${API_URL}/auth/registrar`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ nome, email, senha }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Não foi possível criar a conta");
+  }
+
+  return response.json();
+}
+
 // Wrapper que injeta o token JWT automaticamente e trata sessão expirada
 async function apiFetch(endpoint, options = {}) {
   const token = localStorage.getItem("token");
