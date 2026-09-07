@@ -9,9 +9,17 @@ form.addEventListener("submit", async (event) => {
   const email = document.getElementById("email").value.trim();
   const senha = document.getElementById("senha").value;
   const repetirSenha = document.getElementById("repetir-senha").value;
+  const aceiteLgpd = document.getElementById("aceite-lgpd");
 
   erroEl.textContent = "";
   erroEl.classList.remove("visivel");
+
+  // Validação do checkbox na tela de cadastro
+  if (!aceiteLgpd || !aceiteLgpd.checked) {
+    erroEl.textContent = "Você deve aceitar a Política de Privacidade para se cadastrar.";
+    erroEl.classList.add("visivel");
+    return;
+  }
 
   if (senha !== repetirSenha) {
     erroEl.textContent = "As senhas não coincidem.";
@@ -27,7 +35,7 @@ form.addEventListener("submit", async (event) => {
     window.location.href = "login.html";
   } catch (error) {
     erroEl.textContent =
-      "Não foi possível criar a conta. Verifique os dados e tente novamente.";
+        "Não foi possível criar a conta. Verifique os dados e tente novamente.";
     erroEl.classList.add("visivel");
   } finally {
     btnCadastrar.disabled = false;
@@ -42,8 +50,8 @@ document.querySelectorAll(".toggle-visibility").forEach((btn) => {
     input.type = isPassword ? "text" : "password";
     btn.classList.toggle("is-visible", isPassword);
     btn.setAttribute(
-      "aria-label",
-      isPassword ? "Ocultar senha" : "Mostrar senha",
+        "aria-label",
+        isPassword ? "Ocultar senha" : "Mostrar senha",
     );
   });
 });

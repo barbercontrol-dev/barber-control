@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Data
 @NoArgsConstructor
@@ -26,4 +28,8 @@ public class Usuario {
 
     private String role; // ex: ADMIN, ADMIN gerencia tudo. Como a barbearia só tem administradores, todas as contas criadas terão role = "ADMIN".
 
+    @Column(nullable = false)
+    private Boolean consentimentoLgpd = false;
+
+    private LocalDateTime dataConsentimento;
 }
