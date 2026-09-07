@@ -32,18 +32,8 @@
           >
         </li>
         <li class="nav-item">
-          <a href="#" class="nav-link"
-            ><i class="fa-solid fa-user-group"></i> Clientes</a
-          >
-        </li>
-        <li class="nav-item">
-          <a href="#" class="nav-link"
+          <a href="servicos.html" class="nav-link"
             ><i class="fa-solid fa-bars"></i> Serviços</a
-          >
-        </li>
-        <li class="nav-item">
-          <a href="#" class="nav-link"
-            ><i class="fa-solid fa-chart-simple"></i> Relatórios</a
           >
         </li>
         <li class="nav-item">
@@ -104,11 +94,6 @@
                   </div>
                 </div>
 
-                <div class="campo">
-                  <label for="barbeiro">Barbeiro</label>
-                  <select id="barbeiro"></select>
-                </div>
-
                 <button type="submit" class="btn-agendar">+ Agendar</button>
               </form>
             </div>
@@ -119,6 +104,56 @@
                 <p class="agenda-vazia">
                   Nenhum horário agendado para este dia.
                 </p>
+              </div>
+            </div>
+
+            <div
+              class="modal"
+              id="modal-edicao"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="modal-edicao-titulo"
+            >
+              <div class="modal-content modal-edicao-content">
+                <h3 id="modal-edicao-titulo">Editar agendamento</h3>
+                <form id="form-edicao-agendamento">
+                  <div class="campo">
+                    <label for="edicao-cliente-nome">Cliente</label>
+                    <input type="text" id="edicao-cliente-nome" required />
+                  </div>
+                  <div class="campo">
+                    <label for="edicao-servico">Serviço</label>
+                    <select id="edicao-servico" required></select>
+                  </div>
+                  <div class="campo">
+                    <label for="edicao-barbeiro">Barbeiro</label>
+                    <select id="edicao-barbeiro" required></select>
+                  </div>
+                  <div class="campo">
+                    <label for="edicao-data-hora">Data e horário</label>
+                    <input
+                      type="datetime-local"
+                      id="edicao-data-hora"
+                      required
+                    />
+                  </div>
+                  <div class="modal-actions">
+                    <button
+                      type="button"
+                      class="btn-cancel"
+                      id="btn-cancelar-edicao"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      class="btn-save"
+                      id="btn-salvar-edicao"
+                    >
+                      Salvar
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>

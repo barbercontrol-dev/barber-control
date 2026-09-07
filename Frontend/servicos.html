@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+    <title>Serviços - Barber Control</title>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="profile-container">
+        <div class="profile-avatar"><i class="fa-solid fa-user"></i></div>
+        <div class="profile-name" id="profile-name">Fulano</div>
+      </div>
+
+      <ul class="nav-menu">
+        <li class="nav-item">
+          <a href="index.html" class="nav-link"
+            ><i class="fa-solid fa-house"></i> Início</a
+          >
+        </li>
+        <li class="nav-item">
+          <a href="agendamento.html" class="nav-link"
+            ><i class="fa-regular fa-calendar-days"></i> Agendamentos</a
+          >
+        </li>
+        <li class="nav-item">
+          <a href="servicos.html" class="nav-link active"
+            ><i class="fa-solid fa-bars"></i> Serviços</a
+          >
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link"
+            ><i class="fa-solid fa-gear"></i> Configurações</a
+          >
+        </li>
+        <li class="nav-item" style="border: none">
+          <a href="login.html" id="btn-logout" class="nav-link"
+            ><i class="fa-solid fa-arrow-right-from-bracket"></i> Sair</a
+          >
+        </li>
+      </ul>
+    </aside>
+
+    <main class="main-content">
+      <section class="servicos-page">
+        <div class="welcome-header">
+          <h1>Serviços</h1>
+        </div>
+
+        <div class="servicos-panel">
+          <div class="servicos-toolbar">
+            <label class="servicos-search">
+              <span class="sr-only">Pesquisar por serviço</span>
+              <input
+                type="search"
+                id="busca-servico"
+                placeholder="Pesquisar por serviço"
+              />
+              <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            </label>
+            <button
+              type="button"
+              class="btn-servico-principal"
+              id="btn-adicionar-servico"
+            >
+              <i class="fa-solid fa-plus"></i> Adicionar Serviço
+            </button>
+          </div>
+
+          <div class="servicos-table-wrap">
+            <table class="servicos-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nome</th>
+                  <th>Valor</th>
+                  <th>Duração</th>
+                  <th><span class="sr-only">Ações</span></th>
+                </tr>
+              </thead>
+              <tbody id="lista-servicos"></tbody>
+            </table>
+            <p class="servicos-vazio" id="servicos-vazio">
+              Nenhum serviço encontrado.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div
+      class="modal"
+      id="modal-servico"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-servico-titulo"
+    >
+      <div class="modal-content servico-modal-content">
+        <h3 id="modal-servico-titulo">Adicionar serviço</h3>
+        <form id="form-servico">
+          <div class="campo-servico">
+            <label for="servico-nome">Nome</label>
+            <input type="text" id="servico-nome" required maxlength="120" />
+          </div>
+          <div class="campo-servico-linha">
+            <div class="campo-servico">
+              <label for="servico-valor">Valor (R$)</label>
+              <input
+                type="number"
+                id="servico-valor"
+                min="0"
+                step="0.01"
+                required
+              />
+            </div>
+            <div class="campo-servico">
+              <label for="servico-duracao">Duração (min)</label>
+              <input
+                type="number"
+                id="servico-duracao"
+                min="1"
+                step="1"
+                required
+              />
+            </div>
+          </div>
+          <p class="servico-form-erro" id="servico-form-erro" role="alert"></p>
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" id="btn-cancelar-servico">
+              Cancelar
+            </button>
+            <button type="submit" class="btn-save" id="btn-salvar-servico">
+              Salvar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/servicos.js"></script>
+  </body>
+</html>

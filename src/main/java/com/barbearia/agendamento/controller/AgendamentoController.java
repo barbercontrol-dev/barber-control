@@ -1,10 +1,13 @@
 package com.barbearia.agendamento.controller;
 
 import com.barbearia.agendamento.model.Agendamento;
+import com.barbearia.agendamento.model.Usuario;
 import com.barbearia.agendamento.service.AgendamentoService;
+import com.barbearia.agendamento.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,9 +21,16 @@ public class AgendamentoController {
     @Autowired
     private AgendamentoService agendamentoService;
 
+    @Autowired
+    private UsuarioService usuarioService;
+
     @PostMapping
-    public ResponseEntity<?> criarAgendamento(@RequestBody Agendamento agendamento) {
+    public ResponseEntity<?> criarAgendamento(@RequestBody Agendamento agendamento,
+                                              Authentication authentication) {
     try {
+        Usuario barbeiro = usuarioService.buscarPorEmail(authentication.getName())
+                .orElseThrow(() -> new IllegalArgumentException("Usuário autenticado não encontrado."));
+        agendamento.setBarbeiro(barbeiro);
         Agendamento criado = agendamentoService.criarAgendamento(agendamento);
         return ResponseEntity.ok(criado);
     } catch (IllegalStateException e) {
