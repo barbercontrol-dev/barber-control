@@ -41,23 +41,33 @@ public class AgendamentoController {
 }
 
     @GetMapping
-    public List<Agendamento> listarAgendamentos() {
-        return agendamentoService.listarTodos();
+    public List<Agendamento> listarAgendamentos(Authentication authentication) {
+        Usuario barbeiro = usuarioService.buscarPorEmail(authentication.getName()).orElseThrow();
+        return agendamentoService.listarPorBarbeiro(barbeiro.getId());
     }
 
     @GetMapping("/barbeiro/{barbeiroId}")
-    public List<Agendamento> listarPorBarbeiro(@PathVariable Long barbeiroId) {
-        return agendamentoService.listarPorBarbeiro(barbeiroId);
+    public List<Agendamento> listarPorBarbeiro(@PathVariable Long barbeiroId,
+                                               Authentication authentication) {
+        Usuario barbeiroAutenticado = usuarioService.buscarPorEmail(authentication.getName()).orElseThrow();
+        return agendamentoService.listarPorBarbeiro(barbeiroAutenticado.getId());
     }
 
     @GetMapping("/{id}")
-    public Optional<Agendamento> buscarPorId(@PathVariable Long id) {
-        return agendamentoService.buscarPorId(id);
+    public Optional<Agendamento> buscarPorId(@PathVariable Long id, Authentication authentication) {
+        Usuario barbeiro = usuarioService.buscarPorEmail(authentication.getName()).orElseThrow();
+        return agendamentoService.buscarPorIdDoBarbeiro(id, barbeiro.getId());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> atualizarAgendamento(@PathVariable Long id, @RequestBody Agendamento agendamentoAtualizado) {
+    public ResponseEntity<?> atualizarAgendamento(@PathVariable Long id,
+                                                   @RequestBody Agendamento agendamentoAtualizado,
+                                                   Authentication authentication) {
         try {
+            Usuario barbeiro = usuarioService.buscarPorEmail(authentication.getName()).orElseThrow();
+            if (agendamentoService.buscarPorIdDoBarbeiro(id, barbeiro.getId()).isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
             Agendamento atualizado = agendamentoService.atualizarAgendamento(id, agendamentoAtualizado);
             return ResponseEntity.ok(atualizado);
         } catch (IllegalStateException e) {
@@ -66,12 +76,23 @@ public class AgendamentoController {
     }
 
     @PatchMapping("/{id}/status")
-    public Agendamento atualizarStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
-        return agendamentoService.atualizarStatus(id, body.get("status"));
+    public ResponseEntity<Agendamento> atualizarStatus(@PathVariable Long id,
+                                                        @RequestBody Map<String, String> body,
+                                                        Authentication authentication) {
+        Usuario barbeiro = usuarioService.buscarPorEmail(authentication.getName()).orElseThrow();
+        if (agendamentoService.buscarPorIdDoBarbeiro(id, barbeiro.getId()).isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(agendamentoService.atualizarStatus(id, body.get("status")));
     }
 
     @DeleteMapping("/{id}")
-    public void deletarAgendamento(@PathVariable Long id) {
-        agendamentoService.deletarAgendamento(id);
+    public ResponseEntity<Void> deletarAgendamento(@PathVariable Long id, Authentication authentication) {
+        Usuario barbeiro = usuarioService.buscarPorEmail(authentication.getName()).orElseThrow();
+        if (agendamentoService.buscarPorIdDoBarbeiro(id, barbeiro.getId()).isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        agendamentoService.deletarAgendamentoDoBarbeiro(id, barbeiro.getId());
+        return ResponseEntity.noContent().build();
     }
 }

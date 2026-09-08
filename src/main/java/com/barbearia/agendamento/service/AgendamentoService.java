@@ -41,16 +41,20 @@ public class AgendamentoService {
         return agendamentoRepository.findById(id);
     }
 
+    public Optional<Agendamento> buscarPorIdDoBarbeiro(Long id, Long barbeiroId) {
+        return agendamentoRepository.findByIdAndBarbeiroId(id, barbeiroId);
+    }
+
     public Agendamento atualizarAgendamento(Long id, Agendamento agendamentoAtualizado) {
         Optional<Agendamento> existente = agendamentoRepository.findById(id);
         if (existente.isPresent()) {
+            Agendamento agendamento = existente.get();
+            agendamentoAtualizado.setBarbeiro(agendamento.getBarbeiro());
             Servico servicoCompleto = buscarServicoCompleto(agendamentoAtualizado.getServico().getId());
             agendamentoAtualizado.setServico(servicoCompleto);
 
             validarDisponibilidade(agendamentoAtualizado, id);
 
-            Agendamento agendamento = existente.get();
-            agendamento.setBarbeiro(agendamentoAtualizado.getBarbeiro());
             agendamento.setServico(servicoCompleto);
             agendamento.setClienteNome(agendamentoAtualizado.getClienteNome());
             agendamento.setClienteTelefone(agendamentoAtualizado.getClienteTelefone());
@@ -72,6 +76,11 @@ public class AgendamentoService {
 
     public void deletarAgendamento(Long id) {
         agendamentoRepository.deleteById(id);
+    }
+
+    public void deletarAgendamentoDoBarbeiro(Long id, Long barbeiroId) {
+        agendamentoRepository.findByIdAndBarbeiroId(id, barbeiroId)
+                .ifPresent(agendamentoRepository::delete);
     }
 
     private Servico buscarServicoCompleto(Long servicoId) {

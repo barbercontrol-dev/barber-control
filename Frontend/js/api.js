@@ -18,7 +18,7 @@ async function apiRegistrar(nome, email, senha) {
   const response = await fetch(`${API_URL}/auth/registrar`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nome, email, senha }),
+    body: JSON.stringify({ nome, email, senha, consentimentoLgpd: true }),
   });
 
   if (!response.ok) {

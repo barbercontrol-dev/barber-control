@@ -21,7 +21,6 @@ let diaSelecionado = hoje.getDate();
 
 let agendamentosDoMes = [];
 let servicosDisponiveis = [];
-let barbeirosDisponiveis = [];
 
 const calendarioEl = document.getElementById("calendario");
 const mesTituloEl = document.getElementById("mes-titulo");
@@ -37,7 +36,6 @@ const modalEdicaoEl = document.getElementById("modal-edicao");
 const formEdicaoEl = document.getElementById("form-edicao-agendamento");
 const edicaoClienteNomeEl = document.getElementById("edicao-cliente-nome");
 const edicaoServicoEl = document.getElementById("edicao-servico");
-const edicaoBarbeiroEl = document.getElementById("edicao-barbeiro");
 const edicaoDataHoraEl = document.getElementById("edicao-data-hora");
 let agendamentoEmEdicao = null;
 
@@ -92,15 +90,11 @@ function gerarHorarios() {
 }
 
 async function carregarServicosEBarbeiros() {
-  const [respServicos, respBarbeiros] = await Promise.all([
-    apiFetch("/api/servicos"),
-    apiFetch("/api/usuarios"),
-  ]);
+  const respServicos = await apiFetch("/api/servicos");
 
-  if (!respServicos || !respBarbeiros) return;
+  if (!respServicos) return;
 
   servicosDisponiveis = await respServicos.json();
-  barbeirosDisponiveis = await respBarbeiros.json();
 
   servicoSelect.innerHTML = servicosDisponiveis
     .map((s) => `<option value="${s.id}">${s.nome}</option>`)
@@ -232,9 +226,6 @@ function preencherOpcoesEdicao() {
   edicaoServicoEl.innerHTML = servicosDisponiveis
     .map((s) => `<option value="${s.id}">${s.nome}</option>`)
     .join("");
-  edicaoBarbeiroEl.innerHTML = barbeirosDisponiveis
-    .map((b) => `<option value="${b.id}">${b.nome}</option>`)
-    .join("");
 }
 
 function abrirEdicao(id) {
@@ -246,7 +237,6 @@ function abrirEdicao(id) {
   preencherOpcoesEdicao();
   edicaoClienteNomeEl.value = agendamentoEmEdicao.clienteNome || "";
   edicaoServicoEl.value = agendamentoEmEdicao.servico?.id || "";
-  edicaoBarbeiroEl.value = agendamentoEmEdicao.barbeiro?.id || "";
   edicaoDataHoraEl.value = agendamentoEmEdicao.dataHora.slice(0, 16);
   modalEdicaoEl.style.display = "flex";
 }
@@ -290,7 +280,6 @@ formEdicaoEl.addEventListener("submit", async (event) => {
   const resp = await apiFetch(`/api/agendamentos/${agendamentoEmEdicao.id}`, {
     method: "PUT",
     body: JSON.stringify({
-      barbeiro: { id: Number(edicaoBarbeiroEl.value) },
       servico: { id: Number(edicaoServicoEl.value) },
       clienteNome: edicaoClienteNomeEl.value.trim(),
       dataHora: edicaoDataHoraEl.value + ":00",
