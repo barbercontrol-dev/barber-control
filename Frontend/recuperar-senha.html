@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BarberControl - Recuperar senha</title>
+    <style>
+      :root {
+        --primary: #ffc107;
+        --dark: #333;
+        --muted: #666;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        font-family: Georgia, "Times New Roman", serif;
+        color: var(--dark);
+        background: var(--primary);
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background:
+          radial-gradient(
+            circle at 15% 20%,
+            rgba(51, 51, 51, 0.08),
+            transparent 38%
+          ),
+          radial-gradient(
+            circle at 85% 75%,
+            rgba(51, 51, 51, 0.08),
+            transparent 38%
+          );
+      }
+      .card {
+        position: relative;
+        width: 100%;
+        max-width: 820px;
+        display: flex;
+        overflow: hidden;
+        min-height: 430px;
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(51, 51, 51, 0.25);
+      }
+      .form-side {
+        position: relative;
+        flex: 1;
+        padding: 48px 44px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .brand {
+        text-align: center;
+        margin-bottom: 28px;
+      }
+      h1 {
+        font-size: 1.9rem;
+        font-weight: 400;
+      }
+      .brand p {
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+      .field {
+        margin-bottom: 20px;
+      }
+      label {
+        display: block;
+        margin-bottom: 7px;
+        font-size: 0.85rem;
+      }
+      input {
+        width: 100%;
+        padding: 11px 12px;
+        border: 0;
+        border-bottom: 1.5px solid #ccc;
+        outline: 0;
+        font:
+          0.95rem Georgia,
+          "Times New Roman",
+          serif;
+      }
+      input:focus {
+        border-bottom-color: var(--primary);
+      }
+      .submit-btn {
+        display: block;
+        margin: 8px auto 0;
+        padding: 12px 32px;
+        border: 0;
+        border-radius: 8px;
+        background: #cfcfcf;
+        color: #555;
+        font:
+          0.95rem Georgia,
+          "Times New Roman",
+          serif;
+        cursor: pointer;
+      }
+      .submit-btn:hover {
+        background: var(--primary);
+        color: var(--dark);
+      }
+      .message {
+        display: none;
+        margin: 0 0 14px;
+        padding: 8px 10px;
+        border-radius: 6px;
+        background: rgba(39, 125, 80, 0.1);
+        color: #277d50;
+        font:
+          0.85rem "Segoe UI",
+          sans-serif;
+      }
+      .message.visible {
+        display: block;
+      }
+      .links {
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+        margin-top: 20px;
+        font:
+          0.85rem "Segoe UI",
+          sans-serif;
+      }
+      .back-home {
+        position: absolute;
+        top: 18px;
+        left: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 8px;
+        color: #666;
+      }
+      a {
+        color: #3b7ddd;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      .image-side {
+        flex: 1;
+        background: linear-gradient(135deg, #1a1a1a, #4a4a4a 45%, #d9c98a);
+      }
+      .image-side img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        mix-blend-mode: multiply;
+        opacity: 0.95;
+      }
+      @media (max-width: 720px) {
+        .card {
+          flex-direction: column;
+          max-width: 420px;
+        }
+        .image-side {
+          min-height: 190px;
+          order: -1;
+        }
+        .form-side {
+          padding: 36px 28px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <section class="form-side">
+        <a href="login.html" class="back-home"
+          ><span aria-hidden="true">&larr;</span> Voltar</a
+        >
+        <div class="brand">
+          <h1>BarberControl</h1>
+          <p>Recupere o acesso à sua conta</p>
+        </div>
+        <form id="form-recuperar">
+          <div class="field">
+            <label for="email">Email</label
+            ><input type="email" id="email" required />
+          </div>
+          <p class="message" id="mensagem" role="status">
+            Se este e-mail estiver cadastrado, você receberá as instruções de
+            recuperação.
+          </p>
+          <button type="submit" class="submit-btn">Enviar instruções</button>
+        </form>
+        <div class="links">
+          <a href="login.html">Voltar para o login</a
+          ><a href="index.html">Home</a>
+        </div>
+      </section>
+      <aside class="image-side">
+        <img
+          src="imgs/barber-image.png"
+          alt="Ilustração de barbeiro cortando cabelo"
+        />
+      </aside>
+    </main>
+    <script>
+      document
+        .getElementById("form-recuperar")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+          document.getElementById("mensagem").classList.add("visible");
+        });
+    </script>
+  </body>
+</html>

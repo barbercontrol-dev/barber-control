@@ -57,11 +57,13 @@ header {
   font-weight: 700;
   font-size: 1.05rem;
 }
-.logo .avatar {
-  width: 36px;
-  height: 36px;
+.logo img {
+  display: block;
+  width: 70px;
+  height: 58px;
+  object-fit: cover;
+  object-position: center 39%;
   border-radius: 50%;
-  background: #d9d9d6;
 }
 nav.main-nav ul {
   display: flex;
@@ -446,6 +448,30 @@ nav.main-nav a.active {
 }
 
 /* ---------- FOOTER ---------- */
+.site-map-section {
+  background: var(--gray-light);
+  padding: 64px 0;
+}
+.site-map-section .container {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+  align-items: center;
+}
+.site-map-section h2 {
+  font-size: 2.1rem;
+  font-weight: 800;
+}
+.site-map-section nav {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(150px, 1fr));
+  gap: 16px 40px;
+  color: var(--gray-text);
+  font-size: 0.95rem;
+}
+.site-map-section nav a:hover {
+  color: var(--black);
+}
 footer {
   background: var(--black);
   color: var(--white);
@@ -624,5 +650,9 @@ footer nav ul {
     max-width: 260px;
     margin: 0 auto;
     order: -1;
+  }
+  .site-map-section .container {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

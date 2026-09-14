@@ -76,6 +76,26 @@ function formatarData(dia, mes, ano) {
   return `${dd}/${mm}/${ano}`;
 }
 
+function ehDiaAnterior(dia, mes, ano) {
+  const dataSelecionada = new Date(ano, mes, dia);
+  const inicioDeHoje = new Date();
+  inicioDeHoje.setHours(0, 0, 0, 0);
+  return dataSelecionada < inicioDeHoje;
+}
+
+function atualizarDisponibilidadeDoFormulario() {
+  const diaAnterior = ehDiaAnterior(diaSelecionado, mesAtual, anoAtual);
+  const controles = formNovoAgendamento.querySelectorAll(
+    "input, select, button",
+  );
+
+  controles.forEach((controle) => {
+    controle.disabled = diaAnterior;
+  });
+
+  formNovoAgendamento.classList.toggle("dia-anterior", diaAnterior);
+}
+
 function gerarHorarios() {
   horarioSelect.innerHTML = "";
   for (let h = 8; h <= 19; h++) {
@@ -146,6 +166,9 @@ function renderizarCalendario() {
     cell.className = "day-cell";
     cell.textContent = dia;
 
+    const diaAnterior = ehDiaAnterior(dia, mesAtual, anoAtual);
+    if (diaAnterior) cell.classList.add("past");
+
     if (dia === diaSelecionado) cell.classList.add("selected");
 
     const quantidade = contagemPorDia.get(dia);
@@ -168,6 +191,7 @@ function selecionarDia(dia) {
 }
 
 function atualizarPainelDoDia() {
+  atualizarDisponibilidadeDoFormulario();
   const dataFormatada = formatarData(diaSelecionado, mesAtual, anoAtual);
   diaSelecionadoLabelEl.textContent = `Dia ${dataFormatada}`;
   agendaDiaTituloEl.textContent = `Agenda do dia ${String(diaSelecionado).padStart(2, "0")}/${String(mesAtual + 1).padStart(2, "0")}`;
@@ -277,6 +301,18 @@ formEdicaoEl.addEventListener("submit", async (event) => {
   event.preventDefault();
   if (!agendamentoEmEdicao) return;
 
+  const dataEdicao = new Date(edicaoDataHoraEl.value);
+  if (
+    ehDiaAnterior(
+      dataEdicao.getDate(),
+      dataEdicao.getMonth(),
+      dataEdicao.getFullYear(),
+    )
+  ) {
+    alert("Não é possível agendar em um dia que já passou.");
+    return;
+  }
+
   const resp = await apiFetch(`/api/agendamentos/${agendamentoEmEdicao.id}`, {
     method: "PUT",
     body: JSON.stringify({
@@ -313,6 +349,11 @@ formNovoAgendamento.addEventListener("submit", async (e) => {
   const horario = horarioSelect.value;
 
   const dataHora = `${anoAtual}-${String(mesAtual + 1).padStart(2, "0")}-${String(diaSelecionado).padStart(2, "0")}T${horario}:00`;
+
+  if (ehDiaAnterior(diaSelecionado, mesAtual, anoAtual)) {
+    alert("Não é possível agendar em um dia que já passou.");
+    return;
+  }
 
   const resp = await apiFetch("/api/agendamentos", {
     method: "POST",

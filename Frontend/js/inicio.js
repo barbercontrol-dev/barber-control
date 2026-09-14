@@ -223,6 +223,14 @@ document
     const dataHoje = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}-${String(hoje.getDate()).padStart(2, "0")}`;
     const dataHora = `${dataHoje}T${horaInput.value}:00`;
 
+    if (
+      new Date(dataHora) <
+      new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate())
+    ) {
+      alert("Não é possível agendar em um dia que já passou.");
+      return;
+    }
+
     const resp = await apiFetch("/api/agendamentos", {
       method: "POST",
       body: JSON.stringify({

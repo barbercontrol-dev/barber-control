@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -90,6 +91,10 @@ public class AgendamentoService {
 
     // Verifica se o novo horário sobrepõe algum agendamento já existente do mesmo barbeiro
     private void validarDisponibilidade(Agendamento novo, Long idParaIgnorar) {
+        if (novo.getDataHora().toLocalDate().isBefore(LocalDate.now())) {
+            throw new IllegalStateException("Não é possível agendar em um dia que já passou.");
+        }
+
         LocalDateTime novoInicio = novo.getDataHora();
         LocalDateTime novoFim = novoInicio.plusMinutes(novo.getServico().getDuracaoMinutos());
 
