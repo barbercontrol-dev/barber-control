@@ -1,5 +1,6 @@
 package com.barbearia.agendamento.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,6 +22,8 @@ public class Usuario {
     @Column(unique = true, nullable = false)
     private String email;
 
+    // WRITE_ONLY: a API aceita a senha na entrada (cadastro/login), mas nunca a devolve nas respostas
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(nullable = false)
     private String senha;
 

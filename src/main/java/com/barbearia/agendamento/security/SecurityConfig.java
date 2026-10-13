@@ -34,6 +34,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/api/publico/**").permitAll() // NOVO: rotas do cliente (sem login)
                         .requestMatchers(HttpMethod.POST, "/usuarios").permitAll() // LIBERADO: permite criar conta sem token
                         .requestMatchers("/api/servicos/**").authenticated()
                         .anyRequest().authenticated()

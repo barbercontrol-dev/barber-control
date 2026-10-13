@@ -53,3 +53,10 @@ async function apiFetch(endpoint, options = {}) {
 
   return response;
 }
+
+// Escapa texto antes de colocar em innerHTML (evita que um nome vire código)
+function escaparHtml(valor) {
+  const div = document.createElement("div");
+  div.textContent = valor ?? "";
+  return div.innerHTML;
+}

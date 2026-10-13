@@ -1,10 +1,12 @@
 package com.barbearia.agendamento.service;
 
 import com.barbearia.agendamento.model.Usuario;
+import com.barbearia.agendamento.repository.AgendamentoRepository;
 import com.barbearia.agendamento.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,6 +17,9 @@ public class UsuarioService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private AgendamentoRepository agendamentoRepository;
 
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
@@ -41,9 +46,13 @@ public class UsuarioService {
         return encoder.matches(senhaDigitada, senhaArmazenada);
     }
 
+    // Direito de exclusão: apaga os agendamentos do barbeiro
+    // e depois a conta. Tudo na mesma transação: ou apaga tudo, ou nada.
+    @Transactional
     public void excluirConta(String email) {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
+        agendamentoRepository.deleteAll(agendamentoRepository.findByBarbeiroId(usuario.getId()));
         usuarioRepository.delete(usuario);
     }
 }

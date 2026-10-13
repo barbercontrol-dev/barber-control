@@ -23,7 +23,7 @@ function decodeJwtPayload(token) {
   try {
     const payloadBase64 = token.split(".")[1];
     const payloadJson = atob(
-      payloadBase64.replace(/-/g, "+").replace(/_/g, "/"),
+        payloadBase64.replace(/-/g, "+").replace(/_/g, "/"),
     );
     return JSON.parse(payloadJson);
   } catch (e) {
@@ -55,9 +55,9 @@ function ehHoje(dataHoraStr) {
   const data = new Date(dataHoraStr);
   const agora = new Date();
   return (
-    data.getFullYear() === agora.getFullYear() &&
-    data.getMonth() === agora.getMonth() &&
-    data.getDate() === agora.getDate()
+      data.getFullYear() === agora.getFullYear() &&
+      data.getMonth() === agora.getMonth() &&
+      data.getDate() === agora.getDate()
   );
 }
 
@@ -69,7 +69,7 @@ function meusAgendamentos(lista) {
 // ===== Cards de resumo =====
 function atualizarCards() {
   const hojeDoBarbeiro = meusAgendamentos(todosAgendamentos).filter((a) =>
-    ehHoje(a.dataHora),
+      ehHoje(a.dataHora),
   );
 
   totalAgendamentosEl.textContent = hojeDoBarbeiro.length;
@@ -78,8 +78,8 @@ function atualizarCards() {
   clientesComparecidosEl.textContent = comparecidos.length;
 
   const renda = comparecidos.reduce(
-    (soma, a) => soma + (a.servico?.valor || 0),
-    0,
+      (soma, a) => soma + (a.servico?.valor || 0),
+      0,
   );
   rendaAtualEl.textContent = renda.toLocaleString("pt-BR", {
     style: "currency",
@@ -90,8 +90,8 @@ function atualizarCards() {
 // ===== Lista "Agendamentos de hoje" =====
 function renderizarListaHoje() {
   const hojeDoBarbeiro = meusAgendamentos(todosAgendamentos)
-    .filter((a) => ehHoje(a.dataHora))
-    .sort((a, b) => new Date(a.dataHora) - new Date(b.dataHora));
+      .filter((a) => ehHoje(a.dataHora))
+      .sort((a, b) => new Date(a.dataHora) - new Date(b.dataHora));
 
   if (hojeDoBarbeiro.length === 0) {
     listaHojeEl.innerHTML = `<p style="text-align:center;color:#999;font-size:13.5px;">Nenhum agendamento para hoje.</p>`;
@@ -99,19 +99,19 @@ function renderizarListaHoje() {
   }
 
   listaHojeEl.innerHTML = hojeDoBarbeiro
-    .map((a) => {
-      const hora = new Date(a.dataHora).toLocaleTimeString("pt-BR", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-      return `
+      .map((a) => {
+        const hora = new Date(a.dataHora).toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        return `
       <div class="appointment-item">
-        <span>${a.clienteNome}</span>
+        <span>${escaparHtml(a.clienteNome)}</span>
         <span class="appointment-time">${hora}h</span>
       </div>
     `;
-    })
-    .join("");
+      })
+      .join("");
 }
 
 // ===== Gráfico anual =====
@@ -188,8 +188,8 @@ function renderizarGraficoAnual() {
 function popularSelectServicos() {
   const select = document.getElementById("client-service");
   select.innerHTML = servicosDisponiveis
-    .map((s) => `<option value="${s.id}">${s.nome}</option>`)
-    .join("");
+      .map((s) => `<option value="${s.id}">${escaparHtml(s.nome)}</option>`)
+      .join("");
 }
 
 document.getElementById("open-modal-btn").addEventListener("click", () => {
@@ -201,71 +201,71 @@ document.getElementById("close-modal-btn").addEventListener("click", () => {
 });
 
 document
-  .getElementById("save-appointment-btn")
-  .addEventListener("click", async () => {
-    const nomeInput = document.getElementById("client-name");
-    const horaInput = document.getElementById("client-time");
-    const servicoSelect = document.getElementById("client-service");
+    .getElementById("save-appointment-btn")
+    .addEventListener("click", async () => {
+      const nomeInput = document.getElementById("client-name");
+      const horaInput = document.getElementById("client-time");
+      const servicoSelect = document.getElementById("client-service");
 
-    if (!nomeInput.value.trim() || !horaInput.value || !servicoSelect.value) {
-      alert("Por favor, preencha nome, horário e serviço.");
-      return;
-    }
+      if (!nomeInput.value.trim() || !horaInput.value || !servicoSelect.value) {
+        alert("Por favor, preencha nome, horário e serviço.");
+        return;
+      }
 
-    if (!barbeiroAtual) {
-      alert(
-        "Não foi possível identificar o barbeiro logado. Faça login novamente.",
-      );
-      return;
-    }
+      if (!barbeiroAtual) {
+        alert(
+            "Não foi possível identificar o barbeiro logado. Faça login novamente.",
+        );
+        return;
+      }
 
-    const hoje = new Date();
-    const dataHoje = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}-${String(hoje.getDate()).padStart(2, "0")}`;
-    const dataHora = `${dataHoje}T${horaInput.value}:00`;
+      const hoje = new Date();
+      const dataHoje = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}-${String(hoje.getDate()).padStart(2, "0")}`;
+      const dataHora = `${dataHoje}T${horaInput.value}:00`;
 
-    if (
-      new Date(dataHora) <
-      new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate())
-    ) {
-      alert("Não é possível agendar em um dia que já passou.");
-      return;
-    }
+      if (
+          new Date(dataHora) <
+          new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate())
+      ) {
+        alert("Não é possível agendar em um dia que já passou.");
+        return;
+      }
 
-    const resp = await apiFetch("/api/agendamentos", {
-      method: "POST",
-      body: JSON.stringify({
-        barbeiro: { id: barbeiroAtual.id },
-        servico: { id: Number(servicoSelect.value) },
-        clienteNome: nomeInput.value.trim(),
-        dataHora,
-      }),
+      const resp = await apiFetch("/api/agendamentos", {
+        method: "POST",
+        body: JSON.stringify({
+          barbeiro: { id: barbeiroAtual.id },
+          servico: { id: Number(servicoSelect.value) },
+          clienteNome: nomeInput.value.trim(),
+          dataHora,
+        }),
+      });
+
+      if (!resp) return;
+
+      if (resp.status === 409 || resp.status === 400) {
+        const erro = await resp.json();
+        alert(erro.erro || "Não foi possível criar o agendamento.");
+        return;
+      }
+
+      if (!resp.ok) {
+        alert("Erro ao criar agendamento. Tente novamente.");
+        return;
+      }
+
+      nomeInput.value = "";
+      horaInput.value = "";
+      modal.style.display = "none";
+
+      const respAgendamentos = await apiFetch("/api/agendamentos");
+      if (respAgendamentos) {
+        todosAgendamentos = await respAgendamentos.json();
+        atualizarCards();
+        renderizarListaHoje();
+        renderizarGraficoAnual();
+      }
     });
-
-    if (!resp) return;
-
-    if (resp.status === 409 || resp.status === 400) {
-      const erro = await resp.json();
-      alert(erro.erro || "Não foi possível criar o agendamento.");
-      return;
-    }
-
-    if (!resp.ok) {
-      alert("Erro ao criar agendamento. Tente novamente.");
-      return;
-    }
-
-    nomeInput.value = "";
-    horaInput.value = "";
-    modal.style.display = "none";
-
-    const respAgendamentos = await apiFetch("/api/agendamentos");
-    if (respAgendamentos) {
-      todosAgendamentos = await respAgendamentos.json();
-      atualizarCards();
-      renderizarListaHoje();
-      renderizarGraficoAnual();
-    }
-  });
 
 // ===== Inicialização =====
 async function carregarDados() {

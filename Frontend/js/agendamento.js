@@ -44,7 +44,7 @@ function decodeJwtPayload(token) {
   try {
     const payloadBase64 = token.split(".")[1];
     const payloadJson = atob(
-      payloadBase64.replace(/-/g, "+").replace(/_/g, "/"),
+        payloadBase64.replace(/-/g, "+").replace(/_/g, "/"),
     );
     return JSON.parse(payloadJson);
   } catch (e) {
@@ -76,6 +76,14 @@ function formatarData(dia, mes, ano) {
   return `${dd}/${mm}/${ano}`;
 }
 
+// Mostra o telefone (só dígitos no banco) no formato (61) 99999-9999
+function formatarTelefone(valor) {
+  const d = String(valor || "").replace(/\D/g, "");
+  if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+  if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return String(valor || "");
+}
+
 function ehDiaAnterior(dia, mes, ano) {
   const dataSelecionada = new Date(ano, mes, dia);
   const inicioDeHoje = new Date();
@@ -86,7 +94,7 @@ function ehDiaAnterior(dia, mes, ano) {
 function atualizarDisponibilidadeDoFormulario() {
   const diaAnterior = ehDiaAnterior(diaSelecionado, mesAtual, anoAtual);
   const controles = formNovoAgendamento.querySelectorAll(
-    "input, select, button",
+      "input, select, button",
   );
 
   controles.forEach((controle) => {
@@ -117,8 +125,8 @@ async function carregarServicosEBarbeiros() {
   servicosDisponiveis = await respServicos.json();
 
   servicoSelect.innerHTML = servicosDisponiveis
-    .map((s) => `<option value="${s.id}">${s.nome}</option>`)
-    .join("");
+      .map((s) => `<option value="${s.id}">${escaparHtml(s.nome)}</option>`)
+      .join("");
 }
 
 async function carregarAgendamentosDoMes() {
@@ -197,8 +205,8 @@ function atualizarPainelDoDia() {
   agendaDiaTituloEl.textContent = `Agenda do dia ${String(diaSelecionado).padStart(2, "0")}/${String(mesAtual + 1).padStart(2, "0")}`;
 
   const doDia = agendamentosDoMes
-    .filter((a) => new Date(a.dataHora).getDate() === diaSelecionado)
-    .sort((a, b) => new Date(a.dataHora) - new Date(b.dataHora));
+      .filter((a) => new Date(a.dataHora).getDate() === diaSelecionado)
+      .sort((a, b) => new Date(a.dataHora) - new Date(b.dataHora));
 
   if (doDia.length === 0) {
     agendaListaEl.innerHTML = `<p class="agenda-vazia">Nenhum horário agendado para este dia.</p>`;
@@ -206,18 +214,21 @@ function atualizarPainelDoDia() {
   }
 
   agendaListaEl.innerHTML = doDia
-    .map((a) => {
-      const hora = new Date(a.dataHora).toLocaleTimeString("pt-BR", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-      const status = a.status || "AGENDADO";
-      const servico = a.servico ? a.servico.nome : "Serviço não informado";
-      return `
+      .map((a) => {
+        const hora = new Date(a.dataHora).toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        const status = a.status || "AGENDADO";
+        const servico = a.servico ? a.servico.nome : "Serviço não informado";
+        const telefone = a.clienteTelefone
+            ? ` • ${escaparHtml(formatarTelefone(a.clienteTelefone))}`
+            : "";
+        return `
         <div class="agenda-item">
           <div class="agenda-item-conteudo">
-            <div><span class="horario">${hora}</span><span class="agenda-item-nome">${a.clienteNome}</span></div>
-            <div class="agenda-item-detalhes">${servico}</div>
+            <div><span class="horario">${hora}</span><span class="agenda-item-nome">${escaparHtml(a.clienteNome)}</span></div>
+            <div class="agenda-item-detalhes">${escaparHtml(servico)}${telefone}</div>
           </div>
           <div class="agenda-item-acoes">
             <select class="status-select" data-status-id="${a.id}" aria-label="Status do agendamento">
@@ -228,12 +239,12 @@ function atualizarPainelDoDia() {
           </div>
         </div>
       `;
-    })
-    .join("");
+      })
+      .join("");
 
   agendaListaEl.querySelectorAll("[data-status-id]").forEach((select) => {
     select.addEventListener("change", () =>
-      alterarStatus(select.dataset.statusId, select.value),
+        alterarStatus(select.dataset.statusId, select.value),
     );
   });
   agendaListaEl.querySelectorAll("[data-editar-id]").forEach((botao) => {
@@ -241,20 +252,20 @@ function atualizarPainelDoDia() {
   });
   agendaListaEl.querySelectorAll("[data-excluir-id]").forEach((botao) => {
     botao.addEventListener("click", () =>
-      excluirAgendamento(botao.dataset.excluirId),
+        excluirAgendamento(botao.dataset.excluirId),
     );
   });
 }
 
 function preencherOpcoesEdicao() {
   edicaoServicoEl.innerHTML = servicosDisponiveis
-    .map((s) => `<option value="${s.id}">${s.nome}</option>`)
-    .join("");
+      .map((s) => `<option value="${s.id}">${escaparHtml(s.nome)}</option>`)
+      .join("");
 }
 
 function abrirEdicao(id) {
   agendamentoEmEdicao = agendamentosDoMes.find(
-    (a) => String(a.id) === String(id),
+      (a) => String(a.id) === String(id),
   );
   if (!agendamentoEmEdicao) return;
 
@@ -303,11 +314,11 @@ formEdicaoEl.addEventListener("submit", async (event) => {
 
   const dataEdicao = new Date(edicaoDataHoraEl.value);
   if (
-    ehDiaAnterior(
-      dataEdicao.getDate(),
-      dataEdicao.getMonth(),
-      dataEdicao.getFullYear(),
-    )
+      ehDiaAnterior(
+          dataEdicao.getDate(),
+          dataEdicao.getMonth(),
+          dataEdicao.getFullYear(),
+      )
   ) {
     alert("Não é possível agendar em um dia que já passou.");
     return;
@@ -318,6 +329,8 @@ formEdicaoEl.addEventListener("submit", async (event) => {
     body: JSON.stringify({
       servico: { id: Number(edicaoServicoEl.value) },
       clienteNome: edicaoClienteNomeEl.value.trim(),
+      // manda o telefone de volta, senão o backend o apaga ao editar
+      clienteTelefone: agendamentoEmEdicao.clienteTelefone,
       dataHora: edicaoDataHoraEl.value + ":00",
     }),
   });
@@ -335,8 +348,8 @@ formEdicaoEl.addEventListener("submit", async (event) => {
 });
 
 document
-  .getElementById("btn-cancelar-edicao")
-  .addEventListener("click", fecharEdicao);
+    .getElementById("btn-cancelar-edicao")
+    .addEventListener("click", fecharEdicao);
 modalEdicaoEl.addEventListener("click", (event) => {
   if (event.target === modalEdicaoEl) fecharEdicao();
 });

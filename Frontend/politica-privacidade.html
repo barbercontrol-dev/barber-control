@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Privacidade  - Barber Control</title>
+    <title>Privacidade - Barber Control</title>
     <link
             rel="stylesheet"
             href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -260,8 +260,8 @@
         <div class="marca-icone"><i class="fa-solid fa-scissors"></i></div>
         <div class="marca-nome">BARBER<span>CONTROL</span></div>
     </div>
-    <!-- Ajustado para o nome correto da página de cadastro: criar-conta.html -->
-    <a href="criar-conta.html" class="voltar">
+    <!-- Padrão: volta para a criação de conta. Se veio do agendamento do cliente, o script no fim muda o destino. -->
+    <a href="criar-conta.html" id="link-voltar" class="voltar">
         <i class="fa-solid fa-arrow-left"></i> Voltar
     </a>
 </div>
@@ -271,7 +271,7 @@
     <div class="cabecalho">
         <div class="eyebrow">PRIVACIDADE E PROTEÇÃO DE DADOS</div>
         <h1>Como tratamos seus dados</h1>
-        <p>Esta página explica, em linguagem direta, quais dados o Barber Control guarda, por quê, e o que você pode fazer a qualquer momento — conforme a Lei Geral de Proteção de Dados (Lei 13.709/2018).</p>
+        <p>Esta página explica, em linguagem direta, quais dados o Barber Control guarda, por quê, e o que você pode fazer a qualquer momento — conforme a Lei Geral de Proteção de Dados (Lei 13.709/2018). Ela vale para os barbeiros que usam o painel e para os clientes que agendam um horário.</p>
     </div>
 
     <section>
@@ -279,11 +279,12 @@
             <div class="secao-numero">1</div>
             <h2>O que coletamos e por quê</h2>
         </div>
-        <p>Coletamos apenas o necessário para operar sua conta e sua agenda de atendimentos.</p>
+        <p>Coletamos apenas o necessário para operar as contas e a agenda de atendimentos.</p>
         <table>
             <tr><th>Dado</th><th>Para quê</th><th>Base legal</th></tr>
-            <tr><td>Nome e e-mail</td><td>Identificar sua conta e permitir contato</td><td>Execução de contrato</td></tr>
-            <tr><td>Senha</td><td>Autenticar seu acesso ao painel</td><td>Execução de contrato</td></tr>
+            <tr><td>Nome e e-mail do barbeiro</td><td>Identificar a conta e permitir contato</td><td>Execução de contrato</td></tr>
+            <tr><td>Senha do barbeiro</td><td>Autenticar o acesso ao painel</td><td>Execução de contrato</td></tr>
+            <tr><td>Aceite desta política (data e hora)</td><td>Comprovar que o barbeiro tomou ciência ao criar a conta</td><td>Consentimento</td></tr>
             <tr><td>Nome e telefone do cliente</td><td>Confirmar e organizar cada agendamento</td><td>Execução de contrato</td></tr>
         </table>
     </section>
@@ -299,16 +300,24 @@
         <div class="status-linha">
             <i class="fa-solid fa-lock"></i>
             <div>
-                <div class="titulo">Sua senha nunca é armazenada de forma legível</div>
-                <div class="desc">Ela passa por um processo de criptografia antes de ser salva, e não pode ser recuperada em texto simples nem por nós.</div>
+                <div class="titulo">A senha nunca é armazenada de forma legível</div>
+                <div class="desc">Ela passa por um processo de criptografia antes de ser salva, e não é exibida em nenhuma tela do sistema.</div>
             </div>
         </div>
 
         <div class="status-linha">
             <i class="fa-solid fa-key"></i>
             <div>
-                <div class="titulo">Todo acesso exige autenticação segura</div>
+                <div class="titulo">O painel exige autenticação segura</div>
                 <div class="desc">Cada barbeiro só visualiza e gerencia os próprios dados e agendamentos, nunca os de outra conta.</div>
+            </div>
+        </div>
+
+        <div class="status-linha">
+            <i class="fa-solid fa-eye-slash"></i>
+            <div>
+                <div class="titulo">A página de agendamento não expõe dados de outros clientes</div>
+                <div class="desc">Quem agenda vê apenas os horários livres, nunca o nome ou o telefone de quem já agendou.</div>
             </div>
         </div>
 
@@ -324,10 +333,11 @@
     <section>
         <div class="secao-cabecalho">
             <div class="secao-numero">3</div>
-            <h2>Encarregado pelo tratamento de dados</h2>
+            <h2>Responsável e contato</h2>
         </div>
-        <p>Se você tiver dúvidas sobre esta política ou quiser exercer algum dos seus direitos, entre em contato com o responsável pela proteção de dados da barbearia:</p>
-        <p><code>privacidade@suabarbearia.com.br</code></p>
+        <p>Os dados de acesso do barbeiro (e-mail e senha) são tratados pelo Barber Control. Os dados de quem agenda um horário (nome e telefone) pertencem à barbearia que recebeu o agendamento, e o Barber Control atua apenas como o sistema que os armazena.</p>
+        <p>Se você tiver dúvidas sobre esta política ou quiser exercer algum dos seus direitos, fale com o encarregado pelo tratamento de dados:</p>
+        <p><code>suporte@barbercontrol.com</code></p>
     </section>
 
     <section>
@@ -335,22 +345,22 @@
             <div class="secao-numero">4</div>
             <h2>Seus direitos</h2>
         </div>
-        <p>Você pode exercer esses direitos a qualquer momento, direto pelo painel.</p>
+        <p>Você pode exercer esses direitos a qualquer momento, entrando em contato com o encarregado de dados (seção 3).</p>
 
         <div class="acao-card">
-            <h3>Ver os dados que temos sobre você</h3>
-            <p>Consulte tudo o que está associado à sua conta de barbeiro.</p>
-            <div class="como">Como: acesse <code>Configurações → Meus dados</code>.</div>
+            <h3>Saber quais dados temos sobre você</h3>
+            <p>Solicite uma cópia de tudo o que está associado à sua conta ou ao seu agendamento.</p>
+            <div class="como">Como: envie um e-mail para o contato da seção 3.</div>
         </div>
 
         <div class="acao-card">
             <h3>Corrigir dados incorretos</h3>
-            <p>Se algo estiver errado (e-mail, nome), você pode atualizar direto no seu perfil.</p>
+            <p>Se algo estiver errado (nome, e-mail ou telefone), peça a correção.</p>
         </div>
 
         <div class="acao-card">
-            <h3>Encerrar sua conta</h3>
-            <p>A exclusão remove seus dados pessoais do sistema. Solicite ao administrador da barbearia caso deseje encerrar seu acesso.</p>
+            <h3>Excluir seus dados ou encerrar sua conta</h3>
+            <p>A exclusão remove seus dados pessoais do sistema, exceto quando a lei exigir a guarda por outro prazo.</p>
         </div>
     </section>
 
@@ -359,7 +369,7 @@
             <div class="secao-numero">5</div>
             <h2>Por quanto tempo guardamos</h2>
         </div>
-        <p>Mantemos seus dados enquanto sua conta estiver ativa no sistema. Ao encerrar a conta, os dados pessoais são removidos do banco de dados, exceto quando a lei exigir retenção por outro prazo.</p>
+        <p>Mantemos os dados enquanto a conta estiver ativa ou enquanto o agendamento for necessário. Ao encerrar a conta, os dados do barbeiro e os agendamentos ligados a ela são removidos do banco de dados, exceto quando a lei exigir retenção por outro prazo.</p>
     </section>
 
     <section>
@@ -375,6 +385,13 @@
 <footer>
     Última atualização: setembro de 2026 · Barber Control
 </footer>
+
+<script>
+    // Se o cliente abriu esta página pelo agendamento, o "Voltar" leva de volta pra lá
+    if (new URLSearchParams(location.search).get("origem") === "cliente") {
+        document.getElementById("link-voltar").href = "agendamento-cliente.html";
+    }
+</script>
 
 </body>
 </html>
