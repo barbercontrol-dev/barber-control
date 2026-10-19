@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Painel de Agendamentos - Barbearia</title>
+    <title>Painel - BarberControl</title>
 
     <!-- Font Awesome para Ícones -->
     <link
@@ -65,37 +65,51 @@
       <div class="dashboard-left">
         <div class="welcome-header">
           <h1 id="saudacao">Olá, fulano!</h1>
-          <p>Página inicial, controle os agendamentos aqui.</p>
+          <p>Resumo do desempenho do seu negócio neste mês.</p>
+          <p class="dashboard-erro" id="dashboard-erro" role="alert" hidden></p>
         </div>
 
-        <!-- Cards de Resumo -->
-        <div class="cards-grid">
+        <div class="cards-grid dashboard-financeiro-cards">
           <div class="card card-dark">
-            <div class="card-title">Agendamentos<br /><span>hoje</span></div>
-            <div class="card-value" id="total-agendamentos"></div>
+            <div class="card-title">Faturamento</div>
+            <div class="card-value dashboard-kpi-value" id="faturamento-mes">R$ 0,00</div>
+            <div class="dashboard-kpi-caption">No mês atual</div>
           </div>
           <div class="card card-yellow">
-            <div class="card-title">clientes<br />comparecidos</div>
-            <div class="card-value" id="clientes-comparecidos"></div>
+            <div class="card-title">Gastos</div>
+            <div class="card-value dashboard-kpi-value" id="gastos-mes">R$ 0,00</div>
+            <div class="dashboard-kpi-caption">No mês atual</div>
           </div>
           <div class="card card-dark">
-            <div class="card-title">Renda<br /><span>atual</span></div>
-            <div
-              class="card-value"
-              id="renda-atual"
-              style="font-size: 18px; margin-top: 20px"
-            ></div>
+            <div class="card-title">Lucro</div>
+            <div class="card-value dashboard-kpi-value" id="lucro-mes">R$ 0,00</div>
+            <div class="dashboard-kpi-caption">Faturamento menos gastos</div>
+          </div>
+          <div class="card card-yellow">
+            <div class="card-title">Atendimentos realizados</div>
+            <div class="card-value dashboard-kpi-value" id="atendimentos-mes">0</div>
+            <div class="dashboard-kpi-caption">Concluídos neste mês</div>
           </div>
         </div>
 
-        <!-- Gráfico Anual -->
-        <div class="chart-section">
-          <div class="section-title">
-            <h2>Agendamentos anuais</h2>
-            <p>Quantidade de clientes em cada mês do ano</p>
+        <div class="dashboard-graficos">
+          <div class="chart-section">
+            <div class="section-title">
+              <h2>Entradas e gastos</h2>
+              <p>Movimentação diária deste mês</p>
+            </div>
+            <div class="chart-container">
+              <canvas id="fluxoFinanceiroChart" aria-label="Gráfico diário de entradas e gastos"></canvas>
+            </div>
           </div>
-          <div class="chart-container">
-            <canvas id="annualChart"></canvas>
+          <div class="chart-section">
+          <div class="section-title">
+              <h2>Serviços realizados</h2>
+              <p>Atendimentos concluídos por serviço</p>
+          </div>
+            <div class="chart-container">
+              <canvas id="servicosRealizadosChart" aria-label="Gráfico dos serviços realizados no mês"></canvas>
+            </div>
           </div>
         </div>
       </div>
@@ -103,7 +117,10 @@
       <!-- Lado Direito (Lista de Hoje) -->
       <div class="dashboard-right">
         <div class="appointments-panel">
-          <div class="appointments-title">Agendamentos de hoje</div>
+          <div class="appointments-title">
+            <span>Agendamentos de hoje</span>
+            <small id="total-agendamentos">0</small>
+          </div>
 
           <div class="appointments-list" id="appointments-list">
             <!-- Os itens serão gerados dinamicamente pelo JavaScript -->

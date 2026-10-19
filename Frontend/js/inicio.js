@@ -1,15 +1,22 @@
 let barbeiroAtual = null;
 let servicosDisponiveis = [];
 let todosAgendamentos = [];
-let chartInstance = null;
+let entradasDoMes = [];
+let gastosDoMes = [];
+let atendimentosPendentesMes = [];
+let fluxoChart = null;
+let servicosChart = null;
 
 const modal = document.getElementById("add-modal");
 const listaHojeEl = document.getElementById("appointments-list");
 const totalAgendamentosEl = document.getElementById("total-agendamentos");
-const clientesComparecidosEl = document.getElementById("clientes-comparecidos");
-const rendaAtualEl = document.getElementById("renda-atual");
 const saudacaoEl = document.getElementById("saudacao");
 const profileNameEl = document.getElementById("profile-name");
+const dashboardErroEl = document.getElementById("dashboard-erro");
+const moedaBRL = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+});
 
 // ===== Logout =====
 document.getElementById("btn-logout").addEventListener("click", (e) => {
@@ -66,33 +73,13 @@ function meusAgendamentos(lista) {
   return lista.filter((a) => a.barbeiro && a.barbeiro.id === barbeiroAtual.id);
 }
 
-// ===== Cards de resumo =====
-function atualizarCards() {
-  const hojeDoBarbeiro = meusAgendamentos(todosAgendamentos).filter((a) =>
-      ehHoje(a.dataHora),
-  );
-
-  totalAgendamentosEl.textContent = hojeDoBarbeiro.length;
-
-  const comparecidos = hojeDoBarbeiro.filter((a) => a.status === "CONCLUIDO");
-  clientesComparecidosEl.textContent = comparecidos.length;
-
-  const renda = comparecidos.reduce(
-      (soma, a) => soma + (a.servico?.valor || 0),
-      0,
-  );
-  rendaAtualEl.textContent = renda.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
-}
-
 // ===== Lista "Agendamentos de hoje" =====
 function renderizarListaHoje() {
   const hojeDoBarbeiro = meusAgendamentos(todosAgendamentos)
       .filter((a) => ehHoje(a.dataHora))
       .sort((a, b) => new Date(a.dataHora) - new Date(b.dataHora));
 
+  totalAgendamentosEl.textContent = hojeDoBarbeiro.length.toLocaleString("pt-BR");
   if (hojeDoBarbeiro.length === 0) {
     listaHojeEl.innerHTML = `<p style="text-align:center;color:#999;font-size:13.5px;">Nenhum agendamento para hoje.</p>`;
     return;
@@ -114,49 +101,88 @@ function renderizarListaHoje() {
       .join("");
 }
 
-// ===== Gráfico anual =====
-function renderizarGraficoAnual() {
-  const anoAtual = new Date().getFullYear();
-  const contagemPorMes = new Array(12).fill(0);
+function dataLocal(data) {
+  return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}-${String(data.getDate()).padStart(2, "0")}`;
+}
 
-  meusAgendamentos(todosAgendamentos).forEach((a) => {
-    const data = new Date(a.dataHora);
-    if (data.getFullYear() === anoAtual) {
-      contagemPorMes[data.getMonth()]++;
+function obterPeriodoAtual() {
+  const hoje = new Date();
+  const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+  const dias = [];
+  for (let dia = 1; dia <= hoje.getDate(); dia += 1) {
+    const data = new Date(hoje.getFullYear(), hoje.getMonth(), dia);
+    dias.push({
+      chave: dataLocal(data),
+      rotulo: String(dia).padStart(2, "0"),
+    });
+  }
+  return { inicio: dataLocal(inicio), fim: dataLocal(hoje), dias };
+}
+
+function valorMovimentos(movimentos) {
+  return movimentos.reduce((total, movimento) => total + Number(movimento.valor || 0), 0);
+}
+
+function atualizarIndicadores() {
+  const faturamento = valorMovimentos(entradasDoMes) + atendimentosPendentesMes.reduce(
+    (total, atendimento) => total + Number(atendimento.valor || 0),
+    0,
+  );
+  const gastos = valorMovimentos(gastosDoMes);
+  const quantidadeAtendimentos = entradasDoMes.length + atendimentosPendentesMes.length;
+
+  document.getElementById("faturamento-mes").textContent = moedaBRL.format(faturamento);
+  document.getElementById("gastos-mes").textContent = moedaBRL.format(gastos);
+  document.getElementById("lucro-mes").textContent = moedaBRL.format(faturamento - gastos);
+  document.getElementById("atendimentos-mes").textContent = quantidadeAtendimentos.toLocaleString("pt-BR");
+}
+
+function criarConjuntoDiario(movimentos, dias) {
+  const valoresPorData = new Map(dias.map((dia) => [dia.chave, 0]));
+  movimentos.forEach((movimento) => {
+    const data = String(movimento.data).slice(0, 10);
+    if (valoresPorData.has(data)) {
+      valoresPorData.set(data, valoresPorData.get(data) + Number(movimento.valor || 0));
     }
   });
+  return dias.map((dia) => valoresPorData.get(dia.chave) || 0);
+}
 
-  const meses = [
-    "Jan",
-    "Fev",
-    "Mar",
-    "Abr",
-    "Mai",
-    "Jun",
-    "Jul",
-    "Ago",
-    "Set",
-    "Out",
-    "Nov",
-    "Dez",
+function renderizarGraficoFluxoFinanceiro() {
+  const { dias } = obterPeriodoAtual();
+  const entradas = [
+    ...entradasDoMes,
+    ...atendimentosPendentesMes.map((atendimento) => ({
+      data: atendimento.data,
+      valor: atendimento.valor,
+    })),
   ];
-  const ctx = document.getElementById("annualChart").getContext("2d");
 
-  if (chartInstance) chartInstance.destroy();
-
-  chartInstance = new Chart(ctx, {
+  if (fluxoChart) fluxoChart.destroy();
+  fluxoChart = new Chart(document.getElementById("fluxoFinanceiroChart"), {
     type: "line",
     data: {
-      labels: meses,
+      labels: dias.map((dia) => dia.rotulo),
       datasets: [
         {
-          data: contagemPorMes,
-          borderColor: "#1a1a1a",
-          backgroundColor: "#ffc107",
+          label: "Faturamento",
+          data: criarConjuntoDiario(entradas, dias),
+          borderColor: "#27864b",
+          backgroundColor: "rgba(39, 134, 75, 0.12)",
+          pointBackgroundColor: "#27864b",
           borderWidth: 2,
-          pointBackgroundColor: "#ffc107",
-          pointBorderColor: "#1a1a1a",
-          pointRadius: 4,
+          pointRadius: 2,
+          tension: 0.3,
+          fill: true,
+        },
+        {
+          label: "Gastos",
+          data: criarConjuntoDiario(gastosDoMes, dias),
+          borderColor: "#d07b34",
+          backgroundColor: "rgba(208, 123, 52, 0.08)",
+          pointBackgroundColor: "#d07b34",
+          borderWidth: 2,
+          pointRadius: 2,
           tension: 0.3,
           fill: false,
         },
@@ -165,23 +191,92 @@ function renderizarGraficoAnual() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
       plugins: {
-        legend: { display: false },
-        tooltip: { enabled: true },
+        legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 8, padding: 16 } },
+        tooltip: { callbacks: { label: (contexto) => `${contexto.dataset.label}: ${moedaBRL.format(contexto.raw)}` } },
       },
       scales: {
         y: {
           beginAtZero: true,
-          ticks: { stepSize: 1, color: "#888" },
+          ticks: { color: "#888", callback: (valor) => moedaBRL.format(valor) },
           grid: { color: "#f0f0f0" },
         },
-        x: {
-          ticks: { color: "#666" },
-          grid: { display: false },
-        },
+        x: { ticks: { color: "#666", maxTicksLimit: 12 }, grid: { display: false } },
       },
     },
   });
+}
+
+function renderizarGraficoServicos() {
+  const contagem = new Map();
+  const servicosRealizados = [
+    ...entradasDoMes.flatMap((entrada) => entrada.servicos || []),
+    ...atendimentosPendentesMes.map((atendimento) => ({ nome: atendimento.servicoNome })),
+  ];
+  servicosRealizados.forEach((servico) => {
+    const nomeServico = servico.nome || "Serviço não informado";
+    contagem.set(nomeServico, (contagem.get(nomeServico) || 0) + 1);
+  });
+
+  const servicos = Array.from(contagem.entries()).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  if (servicosChart) servicosChart.destroy();
+  servicosChart = new Chart(document.getElementById("servicosRealizadosChart"), {
+    type: "bar",
+    data: {
+      labels: servicos.length ? servicos.map(([nome]) => nome) : ["Sem atendimentos"],
+      datasets: [{
+        label: "Atendimentos",
+        data: servicos.length ? servicos.map(([, quantidade]) => quantidade) : [0],
+        backgroundColor: "#ffc107",
+        borderRadius: 6,
+        maxBarThickness: 28,
+      }],
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (contexto) => `${contexto.raw} atendimento${contexto.raw === 1 ? "" : "s"}` } },
+      },
+      scales: {
+        x: { beginAtZero: true, ticks: { stepSize: 1, color: "#888" }, grid: { color: "#f0f0f0" } },
+        y: { ticks: { color: "#666" }, grid: { display: false } },
+      },
+    },
+  });
+}
+
+async function carregarFinanceiroDoMes() {
+  const periodo = obterPeriodoAtual();
+  const consulta = (tipo) => {
+    const parametros = new URLSearchParams({
+      tipo,
+      inicio: periodo.inicio,
+      fim: periodo.fim,
+    });
+    return apiFetch(`/api/financeiro?${parametros}`);
+  };
+  const parametrosPendentes = new URLSearchParams({
+    inicio: periodo.inicio,
+    fim: periodo.fim,
+  });
+  const [respEntradas, respGastos, respPendentes] = await Promise.all([
+    consulta("ENTRADA"),
+    consulta("SAIDA"),
+    apiFetch(`/api/financeiro/atendimentos-pendentes?${parametrosPendentes}`),
+  ]);
+  if (!respEntradas || !respGastos || !respPendentes) return;
+  if (!respEntradas.ok || !respGastos.ok || !respPendentes.ok) {
+    throw new Error("Não foi possível carregar os dados financeiros deste mês.");
+  }
+  [entradasDoMes, gastosDoMes, atendimentosPendentesMes] = await Promise.all([
+    respEntradas.json(),
+    respGastos.json(),
+    respPendentes.json(),
+  ]);
 }
 
 // ===== Modal: novo agendamento rápido =====
@@ -261,9 +356,16 @@ document
       const respAgendamentos = await apiFetch("/api/agendamentos");
       if (respAgendamentos) {
         todosAgendamentos = await respAgendamentos.json();
-        atualizarCards();
         renderizarListaHoje();
-        renderizarGraficoAnual();
+        try {
+          await carregarFinanceiroDoMes();
+          atualizarIndicadores();
+          renderizarGraficoFluxoFinanceiro();
+          renderizarGraficoServicos();
+        } catch (error) {
+          dashboardErroEl.hidden = false;
+          dashboardErroEl.textContent = error.message;
+        }
       }
     });
 
@@ -277,14 +379,22 @@ async function carregarDados() {
   ]);
 
   if (!respServicos || !respAgendamentos) return;
+  if (!respServicos.ok || !respAgendamentos.ok) {
+    throw new Error("Não foi possível carregar os dados do painel.");
+  }
 
   servicosDisponiveis = await respServicos.json();
   todosAgendamentos = await respAgendamentos.json();
 
   popularSelectServicos();
-  atualizarCards();
   renderizarListaHoje();
-  renderizarGraficoAnual();
+  await carregarFinanceiroDoMes();
+  atualizarIndicadores();
+  renderizarGraficoFluxoFinanceiro();
+  renderizarGraficoServicos();
 }
 
-carregarDados();
+carregarDados().catch((error) => {
+  dashboardErroEl.hidden = false;
+  dashboardErroEl.textContent = error.message || "Não foi possível carregar os dados do painel.";
+});

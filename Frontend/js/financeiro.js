@@ -6,6 +6,7 @@ const simboloMoeda = new Intl.NumberFormat("pt-BR", {
 const coresGraficos = ["#ffc107", "#1f1f1f", "#27ae60", "#4f7cac", "#e07a5f", "#8e6cbb", "#5a9b8a"];
 
 let operacoes = [];
+let atendimentosPendentes = [];
 let servicosDisponiveis = [];
 let graficoTendencia = null;
 let graficoDistribuicao = null;
@@ -174,13 +175,26 @@ function chaveOperacao(operacao, agruparPorDia) {
   return agruparPorDia ? operacao.data : operacao.data.slice(0, 7);
 }
 
+function movimentosParaIndicadores() {
+  if (tipoFinanceiro !== "ENTRADA") return operacoes;
+  return [
+    ...operacoes,
+    ...atendimentosPendentes.map((atendimento) => ({
+      data: atendimento.data,
+      valor: atendimento.valor,
+      formaPagamento: "PENDENTE",
+    })),
+  ];
+}
+
 function atualizarIndicadores() {
-  const total = operacoes.reduce((soma, operacao) => soma + Number(operacao.valor || 0), 0);
+  const movimentos = movimentosParaIndicadores();
+  const total = movimentos.reduce((soma, operacao) => soma + Number(operacao.valor || 0), 0);
   document.getElementById("kpi-total").textContent = formatarMoeda(total);
-  document.getElementById("kpi-quantidade").textContent = operacoes.length.toLocaleString("pt-BR");
+  document.getElementById("kpi-quantidade").textContent = movimentos.length.toLocaleString("pt-BR");
 
   if (tipoFinanceiro === "ENTRADA") {
-    const media = operacoes.length ? total / operacoes.length : 0;
+    const media = movimentos.length ? total / movimentos.length : 0;
     document.getElementById("kpi-media").textContent = formatarMoeda(media);
     return;
   }
@@ -197,7 +211,7 @@ function atualizarIndicadores() {
 function renderizarGraficoTendencia() {
   const { chaves, agruparPorDia } = criarChavesPeriodo();
   const valoresPorChave = new Map(chaves.map(({ id }) => [id, 0]));
-  operacoes.forEach((operacao) => {
+  movimentosParaIndicadores().forEach((operacao) => {
     const chave = chaveOperacao(operacao, agruparPorDia);
     valoresPorChave.set(chave, (valoresPorChave.get(chave) || 0) + Number(operacao.valor || 0));
   });
@@ -237,23 +251,25 @@ function renderizarGraficoTendencia() {
 
 function renderizarGraficoDistribuicao() {
   const agrupamentos = new Map();
-  operacoes.forEach((operacao) => {
-    const chave = tipoFinanceiro === "ENTRADA"
-      ? formatarFormaPagamento(operacao.formaPagamento)
-      : operacao.categoria || "Outros";
+  movimentosParaIndicadores().forEach((operacao) => {
+    const chave = operacao.formaPagamento === "PENDENTE"
+      ? "Pagamento pendente"
+      : formatarFormaPagamento(operacao.formaPagamento || "Não informado");
     agrupamentos.set(chave, (agrupamentos.get(chave) || 0) + Number(operacao.valor || 0));
   });
 
+  const dados = Array.from(agrupamentos.entries()).filter(([, valor]) => valor > 0);
+  const total = dados.reduce((soma, [, valor]) => soma + valor, 0);
   if (graficoDistribuicao) graficoDistribuicao.destroy();
   graficoDistribuicao = new Chart(document.getElementById("grafico-distribuicao"), {
     type: "doughnut",
     data: {
-      labels: Array.from(agrupamentos.keys()),
+      labels: dados.length ? dados.map(([forma]) => forma) : ["Sem movimentação"],
       datasets: [{
-        data: Array.from(agrupamentos.values()),
-        backgroundColor: coresGraficos,
+        data: dados.length ? dados.map(([, valor]) => valor) : [1],
+        backgroundColor: dados.length ? coresGraficos : ["#e5e5e5"],
         borderColor: "#fff",
-        borderWidth: 3,
+        borderWidth: dados.length ? 3 : 0,
         hoverOffset: 5,
       }],
     },
@@ -262,8 +278,24 @@ function renderizarGraficoDistribuicao() {
       maintainAspectRatio: false,
       cutout: "64%",
       plugins: {
-        legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 8, padding: 16 } },
-        tooltip: { callbacks: { label: (contexto) => `${contexto.label}: ${formatarMoeda(contexto.raw)}` } },
+        legend: {
+          position: "bottom",
+          labels: {
+            usePointStyle: true,
+            boxWidth: 8,
+            padding: 16,
+            filter: (item) => item.text !== "Sem movimentação",
+          },
+        },
+        tooltip: {
+          filter: () => dados.length > 0,
+          callbacks: {
+            label: (contexto) => {
+              const percentual = total ? (Number(contexto.raw) / total) * 100 : 0;
+              return `${contexto.label}: ${formatarMoeda(contexto.raw)} (${percentual.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%)`;
+            },
+          },
+        },
       },
     },
   });
@@ -298,25 +330,23 @@ function renderizarOperacoes() {
   }).join("");
 }
 
-async function carregarAtendimentosPendentes() {
-  if (tipoFinanceiro !== "ENTRADA") return;
-
+async function buscarAtendimentosPendentes() {
+  if (tipoFinanceiro !== "ENTRADA") return [];
   const painel = document.getElementById("atendimentos-pendentes");
   const lista = document.getElementById("lista-atendimentos-pendentes");
-  try {
-    const parametros = new URLSearchParams({
-      inicio: periodoInicioEl.value,
-      fim: periodoFimEl.value,
-    });
-    const resposta = await apiFetch(`/api/financeiro/atendimentos-pendentes?${parametros}`);
-    if (!resposta) return;
-    if (!resposta.ok) {
-      throw new Error(await mensagemErroDaResposta(resposta, "Não foi possível verificar atendimentos concluídos."));
-    }
+  const parametros = new URLSearchParams({
+    inicio: periodoInicioEl.value,
+    fim: periodoFimEl.value,
+  });
+  const resposta = await apiFetch(`/api/financeiro/atendimentos-pendentes?${parametros}`);
+  if (!resposta) return [];
+  if (!resposta.ok) {
+    throw new Error(await mensagemErroDaResposta(resposta, "Não foi possível verificar atendimentos concluídos."));
+  }
 
-    const atendimentos = await resposta.json();
-    painel.hidden = atendimentos.length === 0;
-    lista.innerHTML = atendimentos.map((atendimento) => `
+  atendimentosPendentes = await resposta.json();
+  painel.hidden = atendimentosPendentes.length === 0;
+  lista.innerHTML = atendimentosPendentes.map((atendimento) => `
       <article class="atendimento-pendente">
         <div class="atendimento-pendente-detalhes">
           <strong>${escapar(atendimento.nomeCliente)}</strong>
@@ -336,9 +366,7 @@ async function carregarAtendimentosPendentes() {
         </button>
       </article>
     `).join("");
-  } catch (erro) {
-    mostrarStatus(erro.message || "Não foi possível verificar atendimentos concluídos.", true);
-  }
+  return atendimentosPendentes;
 }
 
 async function registrarAtendimentoPendente(id, botao) {
@@ -389,11 +417,11 @@ async function carregarOperacoes() {
     }
 
     operacoes = await resposta.json();
+    atendimentosPendentes = await buscarAtendimentosPendentes();
     atualizarIndicadores();
     renderizarGraficoTendencia();
     renderizarGraficoDistribuicao();
     renderizarOperacoes();
-    await carregarAtendimentosPendentes();
   } catch (erro) {
     mostrarStatus(erro.message || "Não foi possível carregar as operações.", true);
     listaOperacoesEl.innerHTML = '<p class="financeiro-vazio">Não foi possível carregar as operações.</p>';
@@ -459,36 +487,11 @@ async function registrarOperacao(evento) {
   }
 }
 
-function exportarCsv() {
-  if (operacoes.length === 0) {
-    mostrarStatus("Não há operações para exportar neste período.", true);
-    return;
-  }
-
-  const linhas = tipoFinanceiro === "ENTRADA"
-    ? [["Data", "Cliente", "Serviços", "Barbeiro", "Forma de pagamento", "Valor"]]
-    : [["Data", "Descrição", "Categoria", "Forma de pagamento", "Valor"]];
-  operacoes.forEach((operacao) => {
-    const registro = tipoFinanceiro === "ENTRADA"
-      ? [operacao.data, operacao.nomeCliente, (operacao.servicos || []).map((servico) => servico.nome).join(" + "), operacao.usuarioNome, formatarFormaPagamento(operacao.formaPagamento), operacao.valor]
-      : [operacao.data, operacao.descricao, operacao.categoria, formatarFormaPagamento(operacao.formaPagamento), operacao.valor];
-    linhas.push(registro);
-  });
-  const csv = `\uFEFF${linhas.map((linha) => linha.map((valor) => `"${String(valor ?? "").replaceAll('"', '""')}"`).join(";")).join("\r\n")}`;
-  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `${tipoFinanceiro.toLowerCase()}-${periodoInicioEl.value}-${periodoFimEl.value}.csv`;
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
 document.getElementById("form-periodo").addEventListener("submit", (evento) => {
   evento.preventDefault();
   carregarOperacoes();
 });
 formRegistroEl.addEventListener("submit", registrarOperacao);
-document.getElementById("btn-exportar").addEventListener("click", exportarCsv);
 document.getElementById("lista-atendimentos-pendentes")?.addEventListener("click", (evento) => {
   const botao = evento.target.closest("[data-registrar-pendente]");
   if (botao) registrarAtendimentoPendente(botao.dataset.registrarPendente, botao);

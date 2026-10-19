@@ -89,7 +89,10 @@
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
-  transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .financeiro-btn:hover:not(:disabled) {
@@ -174,6 +177,25 @@
   box-shadow: 0 8px 24px rgba(24, 24, 24, 0.045);
 }
 
+.financeiro-kpi.principal {
+  background-color: #ffc107;
+}
+
+.financeiro-kpi.principal small {
+  color: #1a1a1a;
+}
+
+.financeiro-kpi.secundario {
+  background-color: black;
+  color: white;
+}
+
+.financeiro-kpi.secundario p,
+.financeiro-kpi.secundario strong,
+.financeiro-kpi.secundario small {
+  color: white;
+}
+
 .financeiro-kpi {
   position: relative;
   min-height: 138px;
@@ -182,8 +204,8 @@
 
 .financeiro-kpi p {
   margin-top: 0;
-  color: #696969;
-  font-size: 12px;
+  color: black;
+  font-size: 17px;
   font-weight: 600;
 }
 
@@ -229,7 +251,7 @@
 
 .financeiro-card-heading h2 {
   color: #202020;
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 750;
 }
 

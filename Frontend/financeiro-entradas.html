@@ -20,26 +20,48 @@
       </div>
       <ul class="nav-menu">
         <li class="nav-item">
-          <a href="index.html" class="nav-link"><i class="fa-solid fa-house"></i> Início</a>
+          <a href="index.html" class="nav-link"
+            ><i class="fa-solid fa-house"></i> Início</a
+          >
         </li>
         <li class="nav-item">
-          <a href="agendamento.html" class="nav-link"><i class="fa-regular fa-calendar-days"></i> Agendamentos</a>
+          <a href="agendamento.html" class="nav-link"
+            ><i class="fa-regular fa-calendar-days"></i> Agendamentos</a
+          >
         </li>
         <li class="nav-item">
-          <a href="servicos.html" class="nav-link"><i class="fa-solid fa-bars"></i> Serviços</a>
+          <a href="servicos.html" class="nav-link"
+            ><i class="fa-solid fa-bars"></i> Serviços</a
+          >
         </li>
         <li class="nav-item nav-financeiro is-open">
-          <button type="button" class="nav-link nav-financeiro-toggle" aria-expanded="true">
+          <button
+            type="button"
+            class="nav-link nav-financeiro-toggle"
+            aria-expanded="true"
+          >
             <i class="fa-solid fa-wallet"></i> Financeiro
-            <i class="fa-solid fa-chevron-down nav-financeiro-chevron" aria-hidden="true"></i>
+            <i
+              class="fa-solid fa-chevron-down nav-financeiro-chevron"
+              aria-hidden="true"
+            ></i>
           </button>
           <ul class="nav-financeiro-submenu">
-            <li><a class="active" href="financeiro-entradas.html" aria-current="page">Entrada</a></li>
+            <li>
+              <a
+                class="active"
+                href="financeiro-entradas.html"
+                aria-current="page"
+                >Entrada</a
+              >
+            </li>
             <li><a href="financeiro-saidas.html">Saída</a></li>
           </ul>
         </li>
         <li class="nav-item" style="border: none">
-          <a href="login.html" id="btn-logout" class="nav-link"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sair</a>
+          <a href="login.html" id="btn-logout" class="nav-link"
+            ><i class="fa-solid fa-arrow-right-from-bracket"></i> Sair</a
+          >
         </li>
       </ul>
     </aside>
@@ -49,7 +71,10 @@
         <header class="financeiro-header">
           <div>
             <h1>Entradas</h1>
-            <p>Acompanhe o faturamento e registre atendimentos em poucos segundos.</p>
+            <p>
+              Acompanhe o faturamento e registre atendimentos em poucos
+              segundos.
+            </p>
           </div>
           <form class="periodo-filtros" id="form-periodo">
             <label>De <input type="date" id="periodo-inicio" required /></label>
@@ -60,15 +85,23 @@
           </form>
         </header>
 
-        <div class="financeiro-status" id="financeiro-status" role="status" aria-live="polite"></div>
+        <div
+          class="financeiro-status"
+          id="financeiro-status"
+          role="status"
+          aria-live="polite"
+        ></div>
 
-        <section class="financeiro-kpis" aria-label="Resumo das entradas do período">
-          <article class="financeiro-kpi">
+        <section
+          class="financeiro-kpis"
+          aria-label="Resumo das entradas do período"
+        >
+          <article class="financeiro-kpi principal">
             <p>Total de entradas</p>
             <strong id="kpi-total">R$ 0,00</strong>
             <small>No período selecionado</small>
           </article>
-          <article class="financeiro-kpi">
+          <article class="financeiro-kpi secundario">
             <p>Atendimentos</p>
             <strong id="kpi-quantidade">0</strong>
             <small>Registros no período</small>
@@ -80,40 +113,78 @@
           </article>
         </section>
 
-        <section class="financeiro-card atendimentos-pendentes" id="atendimentos-pendentes" hidden>
+        <section
+          class="financeiro-card atendimentos-pendentes"
+          id="atendimentos-pendentes"
+          hidden
+        >
           <div class="financeiro-card-heading">
             <div>
               <h2>Atendimentos concluídos sem lançamento</h2>
-              <p>Informe a forma de pagamento para incluir estes atendimentos nas entradas.</p>
+              <p>
+                Informe a forma de pagamento para incluir estes atendimentos nas
+                entradas.
+              </p>
             </div>
           </div>
-          <div id="lista-atendimentos-pendentes" class="lista-atendimentos-pendentes"></div>
+          <div
+            id="lista-atendimentos-pendentes"
+            class="lista-atendimentos-pendentes"
+          ></div>
         </section>
 
         <section class="financeiro-graficos" aria-label="Gráficos de entradas">
           <article class="financeiro-card grafico-tendencia">
             <div class="financeiro-card-heading">
-              <div><h2>Faturamento no período</h2><p>Evolução diária ou mensal conforme o intervalo</p></div>
+              <div>
+                <h2>Faturamento no período</h2>
+                <p>Evolução diária ou mensal conforme o intervalo</p>
+              </div>
             </div>
-            <div class="financeiro-chart-wrap"><canvas id="grafico-tendencia" aria-label="Gráfico de faturamento no período"></canvas></div>
+            <div class="financeiro-chart-wrap">
+              <canvas
+                id="grafico-tendencia"
+                aria-label="Gráfico de faturamento no período"
+              ></canvas>
+            </div>
           </article>
           <article class="financeiro-card grafico-distribuicao">
             <div class="financeiro-card-heading">
-              <div><h2>Formas de pagamento</h2><p>Distribuição do faturamento</p></div>
+              <div>
+                <h2>Formas de pagamento</h2>
+                <p>Distribuição do valor recebido</p>
+              </div>
             </div>
-            <div class="financeiro-chart-wrap financeiro-chart-donut"><canvas id="grafico-distribuicao" aria-label="Gráfico por forma de pagamento"></canvas></div>
+            <div class="financeiro-chart-wrap financeiro-chart-donut">
+              <canvas
+                id="grafico-distribuicao"
+                aria-label="Gráfico por forma de pagamento"
+              ></canvas>
+            </div>
           </article>
         </section>
 
         <section class="financeiro-conteudo">
           <article class="financeiro-card formulario-financeiro">
             <div class="financeiro-card-heading">
-              <div><h2>Novo atendimento</h2><p>Selecione os serviços para calcular o total automaticamente.</p></div>
+              <div>
+                <h2>Novo atendimento</h2>
+                <p>
+                  Selecione os serviços para calcular o total automaticamente.
+                </p>
+              </div>
             </div>
             <form id="form-registro" novalidate>
               <div class="financeiro-campo">
                 <label for="cliente-nome">Nome do cliente</label>
-                <input id="cliente-nome" name="nomeCliente" type="text" maxlength="120" placeholder="Ex.: João Silva" required />
+                <input
+                  id="cliente-nome"
+                  name="nomeCliente"
+                  type="text"
+                  maxlength="120"
+                  placeholder="Ex.: João Silva"
+                  required
+                />
               </div>
               <div class="financeiro-duas-colunas">
                 <div class="financeiro-campo">
@@ -122,17 +193,23 @@
                 </div>
                 <div class="financeiro-campo">
                   <label for="registro-barbeiro">Barbeiro</label>
-                  <select id="registro-barbeiro" disabled required><option>Carregando...</option></select>
+                  <select id="registro-barbeiro" disabled required>
+                    <option>Carregando...</option>
+                  </select>
                 </div>
               </div>
               <fieldset class="financeiro-servicos">
                 <legend>Serviços realizados</legend>
-                <div id="lista-servicos-financeiro" class="lista-servicos-financeiro">
+                <div
+                  id="lista-servicos-financeiro"
+                  class="lista-servicos-financeiro"
+                >
                   <p class="financeiro-vazio">Carregando serviços...</p>
                 </div>
               </fieldset>
               <div class="financeiro-total-preview">
-                <span>Total do atendimento</span><strong id="total-preview">R$ 0,00</strong>
+                <span>Total do atendimento</span
+                ><strong id="total-preview">R$ 0,00</strong>
               </div>
               <div class="financeiro-campo">
                 <label for="forma-pagamento">Forma de pagamento</label>
@@ -144,8 +221,16 @@
                   <option value="CREDITO">Crédito</option>
                 </select>
               </div>
-              <p class="financeiro-form-feedback" id="form-feedback" role="alert"></p>
-              <button class="financeiro-btn financeiro-btn-primary financeiro-btn-full" id="btn-salvar" type="submit">
+              <p
+                class="financeiro-form-feedback"
+                id="form-feedback"
+                role="alert"
+              ></p>
+              <button
+                class="financeiro-btn financeiro-btn-primary financeiro-btn-full"
+                id="btn-salvar"
+                type="submit"
+              >
                 <i class="fa-solid fa-plus"></i> Registrar entrada
               </button>
             </form>
@@ -153,10 +238,10 @@
 
           <article class="financeiro-card operacoes-card">
             <div class="financeiro-card-heading financeiro-operacoes-heading">
-              <div><h2>Últimas operações</h2><p>Entradas no período selecionado</p></div>
-              <button type="button" class="financeiro-btn financeiro-btn-outline" id="btn-exportar">
-                <i class="fa-solid fa-download"></i> Exportar CSV
-              </button>
+              <div>
+                <h2>Últimas operações</h2>
+                <p>Entradas no período selecionado</p>
+              </div>
             </div>
             <div id="lista-operacoes" class="lista-operacoes">
               <p class="financeiro-vazio">Carregando operações...</p>

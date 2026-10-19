@@ -134,10 +134,12 @@ body {
   display: flex;
   gap: 30px;
   overflow-y: auto;
+  align-items: flex-start;
 }
 
 .dashboard-left {
   flex: 1;
+  min-width: 0;
 }
 
 .welcome-header h1 {
@@ -161,6 +163,12 @@ body {
   margin-bottom: 35px;
 }
 
+.dashboard-financeiro-cards {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
 .card {
   border-radius: 20px;
   padding: 25px 20px;
@@ -170,6 +178,38 @@ body {
   flex-direction: column;
   justify-content: space-between;
   min-height: 140px;
+}
+
+.dashboard-financeiro-cards .card {
+  min-height: 124px;
+  padding: 18px 12px;
+  border-radius: 15px;
+  text-align: left;
+}
+
+.dashboard-financeiro-cards .card-title {
+  min-height: 30px;
+  font-size: 16px;
+}
+
+.dashboard-financeiro-cards .card-value.dashboard-kpi-value {
+  margin-top: 6px;
+  overflow-wrap: anywhere;
+  font-size: clamp(19px, 1.8vw, 26px);
+  line-height: 1.2;
+}
+
+.dashboard-kpi-caption {
+  margin-top: 5px;
+  color: inherit;
+  font-size: 13px;
+  opacity: 0.72;
+}
+
+.dashboard-erro:not([hidden]) {
+  margin: 8px 0 0;
+  color: #a32626;
+  font-size: 13px;
 }
 
 .card-dark {
@@ -225,36 +265,70 @@ body {
   width: 100%;
 }
 
+.dashboard-graficos {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr);
+  align-items: start;
+  gap: 16px;
+}
+
+.dashboard-graficos .chart-section {
+  min-width: 0;
+  padding: 18px;
+  border-radius: 16px;
+}
+
+.dashboard-graficos .chart-container {
+  height: 270px;
+}
+
 /* Painel Direito - Agendamentos de Hoje */
 .dashboard-right {
-  width: 320px;
+  width: 270px;
   flex-shrink: 0;
 }
 
 .appointments-panel {
   background-color: #ffffff;
   border-radius: 25px;
-  padding: 25px;
+  padding: 18px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 80px);
+  height: min(620px, calc(100vh - 80px));
+  min-height: 320px;
   position: sticky;
   top: 40px;
 }
 
 .appointments-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   font-size: 18px;
   font-weight: 700;
   color: #1a1a1a;
-  margin-bottom: 20px;
-  text-align: center;
+  margin-bottom: 14px;
+  text-align: left;
+}
+
+.appointments-title small {
+  display: inline-flex;
+  min-width: 25px;
+  height: 25px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  border-radius: 20px;
+  background: #fff2c2;
+  color: #755800;
+  font-size: 11px;
 }
 
 .appointments-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   overflow-y: auto;
   flex: 1;
   padding-right: 5px;
@@ -263,12 +337,12 @@ body {
 .appointment-item {
   background-color: #f7eedd;
   border-radius: 12px;
-  padding: 14px 18px;
+  padding: 10px 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 12px;
   color: #2a2a2a;
 }
 
@@ -282,9 +356,9 @@ body {
   color: #1a1a1a;
   border: none;
   border-radius: 12px;
-  padding: 12px;
+  padding: 10px;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
   margin-top: 15px;
   transition: background-color 0.2s ease;
@@ -949,9 +1023,18 @@ body {
     width: 100%;
   }
 
+  .dashboard-financeiro-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-graficos {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .appointments-panel {
     height: auto;
     position: static;
+    max-height: 380px;
   }
 
   .calendario {
@@ -967,6 +1050,10 @@ body {
 
 @media (max-width: 560px) {
   .cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-graficos {
     grid-template-columns: 1fr;
   }
 

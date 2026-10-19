@@ -14,6 +14,7 @@ public record MovimentoFinanceiroResponse(
         String formaPagamento,
         BigDecimal valor,
         String usuarioNome,
+        Long agendamentoId,
         List<ServicoRegistrado> servicos
 ) {
     public record ServicoRegistrado(Long id, String nome, BigDecimal valor) {

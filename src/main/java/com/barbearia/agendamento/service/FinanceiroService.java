@@ -236,6 +236,7 @@ public class FinanceiroService {
                 movimento.getFormaPagamento(),
                 movimento.getValor(),
                 movimento.getUsuario().getNome(),
+                movimento.getAgendamento() == null ? null : movimento.getAgendamento().getId(),
                 servicos
         );
     }
