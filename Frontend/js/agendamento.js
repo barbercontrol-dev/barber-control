@@ -38,6 +38,12 @@ const edicaoClienteNomeEl = document.getElementById("edicao-cliente-nome");
 const edicaoServicoEl = document.getElementById("edicao-servico");
 const edicaoDataHoraEl = document.getElementById("edicao-data-hora");
 let agendamentoEmEdicao = null;
+const modalConclusaoEl = document.getElementById("modal-conclusao");
+const formConclusaoEl = document.getElementById("form-conclusao");
+const conclusaoFormaPagamentoEl = document.getElementById("conclusao-forma-pagamento");
+const conclusaoFeedbackEl = document.getElementById("conclusao-feedback");
+const botaoConfirmarConclusaoEl = document.getElementById("btn-confirmar-conclusao");
+let alteracaoStatusPendente = null;
 
 // ===== Identificar quem está logado, para mostrar o nome na sidebar =====
 function decodeJwtPayload(token) {
@@ -243,9 +249,17 @@ function atualizarPainelDoDia() {
       .join("");
 
   agendaListaEl.querySelectorAll("[data-status-id]").forEach((select) => {
-    select.addEventListener("change", () =>
-        alterarStatus(select.dataset.statusId, select.value),
-    );
+    select.addEventListener("change", () => {
+      const agendamento = agendamentosDoMes.find(
+          (item) => String(item.id) === String(select.dataset.statusId),
+      );
+      const statusAnterior = agendamento?.status || "AGENDADO";
+      if (select.value === "CONCLUIDO" && statusAnterior !== "CONCLUIDO") {
+        abrirModalConclusao(select, statusAnterior);
+        return;
+      }
+      alterarStatus(select.dataset.statusId, select.value, statusAnterior, select);
+    });
   });
   agendaListaEl.querySelectorAll("[data-editar-id]").forEach((botao) => {
     botao.addEventListener("click", () => abrirEdicao(botao.dataset.editarId));
@@ -281,19 +295,84 @@ function fecharEdicao() {
   agendamentoEmEdicao = null;
 }
 
-async function alterarStatus(id, status) {
+function abrirModalConclusao(select, statusAnterior) {
+  alteracaoStatusPendente = {
+    id: select.dataset.statusId,
+    select,
+    statusAnterior,
+  };
+  conclusaoFeedbackEl.textContent = "";
+  conclusaoFormaPagamentoEl.value = "";
+  modalConclusaoEl.style.display = "flex";
+  conclusaoFormaPagamentoEl.focus();
+}
+
+function fecharModalConclusao(restaurarStatus = true) {
+  if (restaurarStatus && alteracaoStatusPendente) {
+    alteracaoStatusPendente.select.value = alteracaoStatusPendente.statusAnterior;
+  }
+  modalConclusaoEl.style.display = "none";
+  alteracaoStatusPendente = null;
+  formConclusaoEl.reset();
+  conclusaoFeedbackEl.textContent = "";
+}
+
+async function alterarStatus(id, status, statusAnterior, select, formaPagamento = null) {
   const resp = await apiFetch(`/api/agendamentos/${id}/status`, {
     method: "PATCH",
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({ status, formaPagamento }),
   });
   if (!resp || !resp.ok) {
-    alert("Não foi possível alterar o status.");
+    if (select) select.value = statusAnterior;
+    let mensagem = "Não foi possível alterar o status.";
+    if (resp) {
+      try {
+        const erro = await resp.json();
+        mensagem = erro.erro || mensagem;
+      } catch {
+        mensagem = "Não foi possível alterar o status.";
+      }
+    }
+    alert(mensagem);
     return;
   }
   await carregarAgendamentosDoMes();
   renderizarCalendario();
   atualizarPainelDoDia();
 }
+
+formConclusaoEl.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!alteracaoStatusPendente || !formConclusaoEl.reportValidity()) return;
+
+  botaoConfirmarConclusaoEl.disabled = true;
+  botaoConfirmarConclusaoEl.textContent = "Registrando...";
+  try {
+    const pendente = alteracaoStatusPendente;
+    await alterarStatus(
+        pendente.id,
+        "CONCLUIDO",
+        pendente.statusAnterior,
+        pendente.select,
+        conclusaoFormaPagamentoEl.value,
+    );
+    if (agendamentosDoMes.find(
+        (item) => String(item.id) === String(pendente.id) && item.status === "CONCLUIDO",
+    )) {
+      fecharModalConclusao(false);
+    }
+  } finally {
+    botaoConfirmarConclusaoEl.disabled = false;
+    botaoConfirmarConclusaoEl.textContent = "Concluir atendimento";
+  }
+});
+
+document.getElementById("btn-cancelar-conclusao").addEventListener("click", () => {
+  fecharModalConclusao();
+});
+modalConclusaoEl.addEventListener("click", (event) => {
+  if (event.target === modalConclusaoEl) fecharModalConclusao();
+});
 
 async function excluirAgendamento(id) {
   if (!confirm("Deseja realmente excluir este agendamento?")) return;

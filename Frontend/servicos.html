@@ -33,6 +33,16 @@
             ><i class="fa-solid fa-bars"></i> Serviços</a
           >
         </li>
+        <li class="nav-item nav-financeiro">
+          <button type="button" class="nav-link nav-financeiro-toggle" aria-expanded="false">
+            <i class="fa-solid fa-wallet"></i> Financeiro
+            <i class="fa-solid fa-chevron-down nav-financeiro-chevron" aria-hidden="true"></i>
+          </button>
+          <ul class="nav-financeiro-submenu">
+            <li><a href="financeiro-entradas.html">Entrada</a></li>
+            <li><a href="financeiro-saidas.html">Saída</a></li>
+          </ul>
+        </li>
         <li class="nav-item" style="border: none">
           <a href="login.html" id="btn-logout" class="nav-link"
             ><i class="fa-solid fa-arrow-right-from-bracket"></i> Sair</a
@@ -138,6 +148,7 @@
     </div>
 
     <script src="js/api.js"></script>
+    <script src="js/menu-financeiro.js"></script>
     <script src="js/servicos.js"></script>
   </body>
 </html>

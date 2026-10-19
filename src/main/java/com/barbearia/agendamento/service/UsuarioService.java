@@ -2,6 +2,7 @@ package com.barbearia.agendamento.service;
 
 import com.barbearia.agendamento.model.Usuario;
 import com.barbearia.agendamento.repository.AgendamentoRepository;
+import com.barbearia.agendamento.repository.MovimentoFinanceiroRepository;
 import com.barbearia.agendamento.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -20,6 +21,9 @@ public class UsuarioService {
 
     @Autowired
     private AgendamentoRepository agendamentoRepository;
+
+    @Autowired
+    private MovimentoFinanceiroRepository movimentoFinanceiroRepository;
 
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
@@ -52,6 +56,7 @@ public class UsuarioService {
     public void excluirConta(String email) {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
+        movimentoFinanceiroRepository.deleteAllByUsuarioId(usuario.getId());
         agendamentoRepository.deleteAll(agendamentoRepository.findByBarbeiroId(usuario.getId()));
         usuarioRepository.delete(usuario);
     }

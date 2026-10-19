@@ -32,7 +32,7 @@ public class Usuario {
     private String role; // ex: ADMIN, ADMIN gerencia tudo. Como a barbearia só tem administradores, todas as contas criadas terão role = "ADMIN".
 
     @Column(nullable = false)
-    private Boolean consentimentoLgpd = false;
+    private Boolean consentimentoLgpd;
 
     private LocalDateTime dataConsentimento;
 }

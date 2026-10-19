@@ -6,6 +6,7 @@ import com.barbearia.agendamento.repository.AgendamentoRepository;
 import com.barbearia.agendamento.repository.ServicoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.LocalDate;
@@ -20,6 +21,9 @@ public class AgendamentoService {
 
     @Autowired
     private ServicoRepository servicoRepository;
+
+    @Autowired
+    private FinanceiroService financeiroService;
 
     public Agendamento criarAgendamento(Agendamento agendamento) {
         Servico servicoCompleto = buscarServicoCompleto(agendamento.getServico().getId());
@@ -65,10 +69,19 @@ public class AgendamentoService {
         return null;
     }
 
-    public Agendamento atualizarStatus(Long id, String novoStatus) {
+    @Transactional
+    public Agendamento atualizarStatus(Long id, String novoStatus, String formaPagamento) {
+        if (novoStatus == null || !List.of("AGENDADO", "CONCLUIDO", "CANCELADO").contains(novoStatus)) {
+            throw new IllegalArgumentException("Status de agendamento inválido.");
+        }
         Optional<Agendamento> existente = agendamentoRepository.findById(id);
         if (existente.isPresent()) {
             Agendamento agendamento = existente.get();
+            if ("CONCLUIDO".equals(novoStatus)) {
+                financeiroService.registrarEntradaAgendamento(agendamento, formaPagamento);
+            } else if ("CONCLUIDO".equals(agendamento.getStatus())) {
+                financeiroService.removerEntradaAgendamento(id);
+            }
             agendamento.setStatus(novoStatus);
             return agendamentoRepository.save(agendamento);
         }
@@ -76,12 +89,15 @@ public class AgendamentoService {
     }
 
     public void deletarAgendamento(Long id) {
+        financeiroService.removerEntradaAgendamento(id);
         agendamentoRepository.deleteById(id);
     }
 
     public void deletarAgendamentoDoBarbeiro(Long id, Long barbeiroId) {
-        agendamentoRepository.findByIdAndBarbeiroId(id, barbeiroId)
-                .ifPresent(agendamentoRepository::delete);
+        agendamentoRepository.findByIdAndBarbeiroId(id, barbeiroId).ifPresent(agendamento -> {
+            financeiroService.removerEntradaAgendamento(id);
+            agendamentoRepository.delete(agendamento);
+        });
     }
 
     private Servico buscarServicoCompleto(Long servicoId) {

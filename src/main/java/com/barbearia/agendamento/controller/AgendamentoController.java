@@ -76,14 +76,22 @@ public class AgendamentoController {
     }
 
     @PatchMapping("/{id}/status")
-    public ResponseEntity<Agendamento> atualizarStatus(@PathVariable Long id,
-                                                        @RequestBody Map<String, String> body,
-                                                        Authentication authentication) {
+    public ResponseEntity<?> atualizarStatus(@PathVariable Long id,
+                                             @RequestBody Map<String, String> body,
+                                             Authentication authentication) {
         Usuario barbeiro = usuarioService.buscarPorEmail(authentication.getName()).orElseThrow();
         if (agendamentoService.buscarPorIdDoBarbeiro(id, barbeiro.getId()).isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(agendamentoService.atualizarStatus(id, body.get("status")));
+        try {
+            return ResponseEntity.ok(agendamentoService.atualizarStatus(
+                    id,
+                    body.get("status"),
+                    body.get("formaPagamento")
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
+        }
     }
 
     @DeleteMapping("/{id}")

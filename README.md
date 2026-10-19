@@ -1,2 +1,3 @@
-# barber-control
-Sistema de gerenciamento para barbearias 
+# BarberControl
+
+Sistema de gerenciamento para barbearias.
