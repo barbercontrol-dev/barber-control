@@ -3,6 +3,7 @@ package com.barbearia.agendamento.controller;
 import com.barbearia.agendamento.model.Agendamento;
 import com.barbearia.agendamento.model.Servico;
 import com.barbearia.agendamento.model.Usuario;
+import com.barbearia.agendamento.dto.BarbeiroResponse;
 import com.barbearia.agendamento.repository.AgendamentoRepository;
 import com.barbearia.agendamento.repository.ServicoRepository;
 import com.barbearia.agendamento.repository.UsuarioRepository;
@@ -51,29 +52,34 @@ public class PublicoController {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    public record BarbeiroPublico(Long id, String nome) {}
-
     public record ServicoPublico(Long id, String nome, BigDecimal valor, Integer duracaoMinutos) {}
 
     public record AgendarRequest(Long barbeiroId, Long servicoId, String clienteNome,
                                  String clienteTelefone, LocalDateTime dataHora) {}
 
     @GetMapping("/barbeiros")
-    public List<BarbeiroPublico> listarBarbeiros() {
-        return usuarioRepository.findAll().stream()
-                .map(u -> new BarbeiroPublico(
+    public List<BarbeiroResponse> listarBarbeiros() {
+        return usuarioRepository.findByRoleAndBarbeariaIsNotNullOrderByNome("BARBEIRO").stream()
+                .map(u -> new BarbeiroResponse(
                         u.getId(),
-                        (u.getNome() != null && !u.getNome().isBlank()) ? u.getNome() : "Barbeiro " + u.getId()))
+                        (u.getNome() != null && !u.getNome().isBlank()) ? u.getNome() : "Barbeiro " + u.getId(),
+                        u.getBarbearia().getNomeBarbearia()))
                 .toList();
     }
 
     @GetMapping("/servicos")
-    public List<ServicoPublico> listarServicos() {
-        return servicoRepository.findAll().stream()
+    public ResponseEntity<?> listarServicos(@RequestParam Long barbeiroId) {
+        Usuario barbeiro = usuarioRepository.findByIdComBarbearia(barbeiroId)
+                .filter(u -> "BARBEIRO".equals(u.getRole()) && u.getBarbearia() != null)
+                .orElse(null);
+        if (barbeiro == null) {
+            return erro(HttpStatus.BAD_REQUEST, "Barbeiro inválido.");
+        }
+        return ResponseEntity.ok(servicoRepository.findByBarbeariaIdOrderById(barbeiro.getBarbearia().getId()).stream()
                 // ignora registros incompletos (ex: serviço de teste sem nome/valor/duração)
                 .filter(s -> s.getNome() != null && s.getValor() != null && s.getDuracaoMinutos() != null)
                 .map(s -> new ServicoPublico(s.getId(), s.getNome(), s.getValor(), s.getDuracaoMinutos()))
-                .toList();
+                .toList());
     }
 
     @GetMapping("/horarios")
@@ -83,7 +89,11 @@ public class PublicoController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate data) {
 
         Servico servico = servicoRepository.findById(servicoId).orElse(null);
-        if (servico == null || servico.getDuracaoMinutos() == null) {
+        Usuario barbeiro = usuarioRepository.findByIdComBarbearia(barbeiroId)
+                .filter(u -> "BARBEIRO".equals(u.getRole()) && u.getBarbearia() != null)
+                .orElse(null);
+        if (barbeiro == null || servico == null || servico.getDuracaoMinutos() == null
+                || !barbeiro.getBarbearia().getId().equals(servico.getBarbeariaId())) {
             return ResponseEntity.badRequest().body(Map.of("erro", "Serviço inválido."));
         }
         int duracao = servico.getDuracaoMinutos();
@@ -140,9 +150,16 @@ public class PublicoController {
             return erro(HttpStatus.BAD_REQUEST, "Fora do horário de funcionamento.");
         }
 
-        Usuario barbeiro = usuarioRepository.findById(req.barbeiroId()).orElse(null);
+        Usuario barbeiro = usuarioRepository.findByIdComBarbearia(req.barbeiroId())
+                .filter(u -> "BARBEIRO".equals(u.getRole()) && u.getBarbearia() != null)
+                .orElse(null);
         if (barbeiro == null) {
             return erro(HttpStatus.BAD_REQUEST, "Barbeiro não encontrado.");
+        }
+        Servico servicoValidado = servicoRepository.findByIdAndBarbeariaId(
+                req.servicoId(), barbeiro.getBarbearia().getId()).orElse(null);
+        if (servicoValidado == null) {
+            return erro(HttpStatus.BAD_REQUEST, "Serviço não encontrado nesta barbearia.");
         }
 
         Servico servico = new Servico();

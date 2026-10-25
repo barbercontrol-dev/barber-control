@@ -21,6 +21,7 @@ let diaSelecionado = hoje.getDate();
 
 let agendamentosDoMes = [];
 let servicosDisponiveis = [];
+let barbeirosDisponiveis = [];
 
 const calendarioEl = document.getElementById("calendario");
 const mesTituloEl = document.getElementById("mes-titulo");
@@ -32,6 +33,7 @@ const servicoSelect = document.getElementById("servico");
 const horarioSelect = document.getElementById("horario");
 const formNovoAgendamento = document.getElementById("form-novo-agendamento");
 const profileNameEl = document.getElementById("profile-name");
+const barbeiroAgendaEl = document.getElementById("barbeiro-agenda");
 const modalEdicaoEl = document.getElementById("modal-edicao");
 const formEdicaoEl = document.getElementById("form-edicao-agendamento");
 const edicaoClienteNomeEl = document.getElementById("edicao-cliente-nome");
@@ -72,7 +74,7 @@ async function identificarUsuarioLogado() {
   const usuarioLogado = usuarios.find((u) => u.email === payload.sub);
 
   if (usuarioLogado && profileNameEl) {
-    profileNameEl.textContent = usuarioLogado.nome;
+    profileNameEl.textContent = usuarioLogado.nomeBarbearia || usuarioLogado.nome;
   }
 }
 
@@ -99,15 +101,17 @@ function ehDiaAnterior(dia, mes, ano) {
 
 function atualizarDisponibilidadeDoFormulario() {
   const diaAnterior = ehDiaAnterior(diaSelecionado, mesAtual, anoAtual);
+  const todasAgendas = barbeiroAgendaEl.value === "todos";
   const controles = formNovoAgendamento.querySelectorAll(
       "input, select, button",
   );
 
   controles.forEach((controle) => {
-    controle.disabled = diaAnterior;
+    controle.disabled = diaAnterior || todasAgendas;
   });
 
   formNovoAgendamento.classList.toggle("dia-anterior", diaAnterior);
+  formNovoAgendamento.classList.toggle("todas-agendas", todasAgendas);
 }
 
 function gerarHorarios() {
@@ -124,9 +128,25 @@ function gerarHorarios() {
 }
 
 async function carregarServicosEBarbeiros() {
+  const respBarbeiros = await apiFetch("/api/barbeiros");
+  if (!respBarbeiros || !respBarbeiros.ok) {
+    barbeiroAgendaEl.innerHTML = '<option value="">Não foi possível carregar os barbeiros</option>';
+    return;
+  }
+  barbeirosDisponiveis = await respBarbeiros.json();
+  barbeiroAgendaEl.innerHTML = [
+    '<option value="todos">Todas as agendas</option>',
+    ...barbeirosDisponiveis.map((barbeiro) =>
+      `<option value="${barbeiro.id}">${escaparHtml(barbeiro.nome)}</option>`,
+    ),
+  ].join("");
+  if (!barbeirosDisponiveis.length) {
+    barbeiroAgendaEl.innerHTML = '<option value="todos">Todas as agendas</option>';
+  }
+
   const respServicos = await apiFetch("/api/servicos");
 
-  if (!respServicos) return;
+  if (!respServicos || !respServicos.ok) return;
 
   servicosDisponiveis = await respServicos.json();
 
@@ -136,7 +156,10 @@ async function carregarServicosEBarbeiros() {
 }
 
 async function carregarAgendamentosDoMes() {
-  const resp = await apiFetch("/api/agendamentos");
+  const query = barbeiroAgendaEl.value === "todos"
+    ? ""
+    : `?barbeiroId=${encodeURIComponent(barbeiroAgendaEl.value)}`;
+  const resp = await apiFetch(`/api/agendamentos${query}`);
   if (!resp) return;
 
   const todos = await resp.json();
@@ -227,6 +250,9 @@ function atualizarPainelDoDia() {
         });
         const status = a.status || "AGENDADO";
         const servico = a.servico ? a.servico.nome : "Serviço não informado";
+        const barbeiro = barbeiroAgendaEl.value === "todos" && a.barbeiro
+            ? `<div class="agenda-item-detalhes">Barbeiro: ${escaparHtml(a.barbeiro.nome)}</div>`
+            : "";
         const telefone = a.clienteTelefone
             ? ` • ${escaparHtml(formatarTelefone(a.clienteTelefone))}`
             : "";
@@ -234,6 +260,7 @@ function atualizarPainelDoDia() {
         <div class="agenda-item">
           <div class="agenda-item-conteudo">
             <div><span class="horario">${hora}</span><span class="agenda-item-nome">${escaparHtml(a.clienteNome)}</span></div>
+            ${barbeiro}
             <div class="agenda-item-detalhes">${escaparHtml(servico)}${telefone}</div>
           </div>
           <div class="agenda-item-acoes">
@@ -439,6 +466,11 @@ formNovoAgendamento.addEventListener("submit", async (e) => {
   const clienteNome = document.getElementById("cliente-nome").value.trim();
   const servicoId = servicoSelect.value;
   const horario = horarioSelect.value;
+  const barbeiroId = barbeiroAgendaEl.value;
+  if (!barbeiroId || barbeiroId === "todos") {
+    alert("Selecione um barbeiro específico para criar um agendamento.");
+    return;
+  }
 
   const dataHora = `${anoAtual}-${String(mesAtual + 1).padStart(2, "0")}-${String(diaSelecionado).padStart(2, "0")}T${horario}:00`;
 
@@ -450,6 +482,7 @@ formNovoAgendamento.addEventListener("submit", async (e) => {
   const resp = await apiFetch("/api/agendamentos", {
     method: "POST",
     body: JSON.stringify({
+      barbeiro: { id: Number(barbeiroId) },
       servico: { id: Number(servicoId) },
       clienteNome,
       dataHora,
@@ -483,5 +516,11 @@ async function iniciar() {
   renderizarCalendario();
   atualizarPainelDoDia();
 }
+
+barbeiroAgendaEl.addEventListener("change", async () => {
+  await carregarAgendamentosDoMes();
+  renderizarCalendario();
+  atualizarPainelDoDia();
+});
 
 iniciar();

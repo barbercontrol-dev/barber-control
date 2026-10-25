@@ -17,6 +17,34 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
     @Query("""
             SELECT a FROM Agendamento a
             WHERE a.barbeiro.id = :barbeiroId
+              AND (a.barbeiro.barbearia.id = :barbeariaId OR a.barbeiro.id = :barbeariaId)
+            ORDER BY a.dataHora
+            """)
+    List<Agendamento> findByBarbeiroDaBarbearia(
+            @Param("barbeiroId") Long barbeiroId,
+            @Param("barbeariaId") Long barbeariaId
+    );
+
+    @Query("""
+            SELECT a FROM Agendamento a
+            WHERE a.barbeiro.barbearia.id = :barbeariaId OR a.barbeiro.id = :barbeariaId
+            ORDER BY a.dataHora
+            """)
+    List<Agendamento> findByBarbearia(@Param("barbeariaId") Long barbeariaId);
+
+    @Query("""
+            SELECT a FROM Agendamento a
+            WHERE a.id = :id
+              AND (a.barbeiro.barbearia.id = :barbeariaId OR a.barbeiro.id = :barbeariaId)
+            """)
+    Optional<Agendamento> findByIdAndBarbearia(
+            @Param("id") Long id,
+            @Param("barbeariaId") Long barbeariaId
+    );
+
+    @Query("""
+            SELECT a FROM Agendamento a
+            WHERE (a.barbeiro.barbearia.id = :barbeiroId OR a.barbeiro.id = :barbeiroId)
               AND a.status = 'CONCLUIDO'
               AND a.dataHora >= :inicio
               AND a.dataHora < :fim
@@ -27,6 +55,21 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
             """)
     List<Agendamento> findConcluidosSemEntradaFinanceira(
             @Param("barbeiroId") Long barbeiroId,
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fim") LocalDateTime fim
+    );
+
+    @Query("""
+            SELECT a FROM Agendamento a
+            JOIN FETCH a.servico
+            WHERE (a.barbeiro.barbearia.id = :barbeariaId OR a.barbeiro.id = :barbeariaId)
+              AND a.status = 'CONCLUIDO'
+              AND a.dataHora >= :inicio
+              AND a.dataHora < :fim
+            ORDER BY a.dataHora
+            """)
+    List<Agendamento> findConcluidosDaBarbearia(
+            @Param("barbeariaId") Long barbeariaId,
             @Param("inicio") LocalDateTime inicio,
             @Param("fim") LocalDateTime fim
     );

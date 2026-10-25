@@ -36,6 +36,11 @@
             ><i class="fa-solid fa-bars"></i> Serviços</a
           >
         </li>
+        <li class="nav-item">
+          <a href="barbeiros.html" class="nav-link"
+            ><i class="fa-solid fa-user-group"></i> Barbeiros</a
+          >
+        </li>
         <li class="nav-item nav-financeiro">
           <button type="button" class="nav-link nav-financeiro-toggle" aria-expanded="false">
             <i class="fa-solid fa-wallet"></i> Financeiro
@@ -78,6 +83,13 @@
           </div>
 
           <div class="coluna-lateral">
+            <div class="seletor-agenda-barbeiro">
+              <label for="barbeiro-agenda">Agenda do barbeiro</label>
+              <select id="barbeiro-agenda" required>
+                <option value="todos">Todas as agendas</option>
+              </select>
+              <p>Para criar um agendamento, selecione um barbeiro específico.</p>
+            </div>
             <div class="novo-agendamento">
               <h3>Novo Agendamento</h3>
               <p class="subtitulo" id="dia-selecionado-label">Dia 14/08/2026</p>

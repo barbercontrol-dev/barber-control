@@ -85,13 +85,32 @@ async function carregarPerfil() {
   }
 
   const usuario = await resposta.json();
-  perfilEl.textContent = usuario.nome;
+  perfilEl.textContent = usuario.nomeBarbearia || usuario.nome;
+}
 
+async function carregarBarbeiros() {
   const barbeiroEl = document.getElementById("registro-barbeiro");
-  if (barbeiroEl) {
-    barbeiroEl.innerHTML = `<option value="${usuario.id}">${escapar(usuario.nome)}</option>`;
-    barbeiroEl.disabled = false;
+  if (!barbeiroEl) return;
+
+  const resposta = await apiFetch("/api/barbeiros");
+  if (!resposta) return;
+  if (!resposta.ok) {
+    throw new Error(await mensagemErroDaResposta(resposta, "Não foi possível carregar os barbeiros."));
   }
+
+  const barbeiros = await resposta.json();
+  if (barbeiros.length === 0) {
+    barbeiroEl.innerHTML = '<option value="">Cadastre um barbeiro primeiro</option>';
+    barbeiroEl.disabled = true;
+    return;
+  }
+
+  barbeiroEl.innerHTML = `
+    ${barbeiros.map((barbeiro) => `
+      <option value="${barbeiro.id}">${escapar(barbeiro.nome)}</option>
+    `).join("")}
+  `;
+  barbeiroEl.disabled = false;
 }
 
 async function carregarServicos() {
@@ -498,6 +517,6 @@ document.getElementById("lista-atendimentos-pendentes")?.addEventListener("click
 });
 configurarLogout();
 
-Promise.all([carregarPerfil(), carregarServicos()])
+Promise.all([carregarPerfil(), carregarBarbeiros(), carregarServicos()])
   .then(carregarOperacoes)
   .catch((erro) => mostrarStatus(erro.message || "Não foi possível carregar os dados financeiros.", true));

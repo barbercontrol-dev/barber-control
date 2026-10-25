@@ -14,6 +14,13 @@ import java.math.BigDecimal;
 
 public class Servico {
 
+    public Servico(Long id, String nome, BigDecimal valor, Integer duracaoMinutos) {
+        this.id = id;
+        this.nome = nome;
+        this.valor = valor;
+        this.duracaoMinutos = duracaoMinutos;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,4 +30,7 @@ public class Servico {
     private BigDecimal valor;
 
     private Integer duracaoMinutos;
+
+    @Column(name = "barbearia_id")
+    private Long barbeariaId;
 }

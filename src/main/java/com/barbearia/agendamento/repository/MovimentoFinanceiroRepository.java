@@ -20,5 +20,7 @@ public interface MovimentoFinanceiroRepository extends JpaRepository<MovimentoFi
 
     Optional<MovimentoFinanceiro> findByAgendamentoId(Long agendamentoId);
 
+    List<MovimentoFinanceiro> findByAgendamento_Barbeiro_Id(Long barbeiroId);
+
     void deleteAllByUsuarioId(Long usuarioId);
 }

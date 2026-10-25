@@ -400,19 +400,10 @@
 
     async function carregarOpcoes() {
         try {
-            const [rb, rs] = await Promise.all([
-                fetch(`${API}/barbeiros`),
-                fetch(`${API}/servicos`),
-            ]);
+            const rb = await fetch(`${API}/barbeiros`);
             const barbeiros = await rb.json();
-            const servicos = await rs.json();
-
-            preencherSelect(selBarbeiro, barbeiros, (b) => b.nome);
-            preencherSelect(selServico, servicos, (s) => {
-                const preco = Number(s.valor).toFixed(2).replace(".", ",");
-                return `${s.nome} — R$ ${preco} (${s.duracaoMinutos} min)`;
-            });
-
+            preencherSelect(selBarbeiro, barbeiros, (b) => `${b.nome} — ${b.barbearia}`);
+            await carregarServicosDoBarbeiro();
             carregarHorarios();
         } catch (e) {
             mostrarMensagem(
@@ -420,6 +411,22 @@
                 "erro"
             );
         }
+    }
+
+    async function carregarServicosDoBarbeiro() {
+        if (!selBarbeiro.value) {
+            selServico.innerHTML = "";
+            return;
+        }
+        const resposta = await fetch(`${API}/servicos?barbeiroId=${encodeURIComponent(selBarbeiro.value)}`);
+        if (!resposta.ok) {
+            throw new Error("Não foi possível carregar os serviços do barbeiro.");
+        }
+        const servicos = await resposta.json();
+        preencherSelect(selServico, servicos, (s) => {
+            const preco = Number(s.valor).toFixed(2).replace(".", ",");
+            return `${s.nome} — R$ ${preco} (${s.duracaoMinutos} min)`;
+        });
     }
 
     /*  Agendar  */
@@ -465,7 +472,14 @@
     el("btn-mes-anterior").addEventListener("click", () => mudarMes(-1));
     el("btn-mes-seguinte").addEventListener("click", () => mudarMes(1));
     selServico.addEventListener("change", carregarHorarios);
-    selBarbeiro.addEventListener("change", carregarHorarios);
+    selBarbeiro.addEventListener("change", async () => {
+        try {
+            await carregarServicosDoBarbeiro();
+            carregarHorarios();
+        } catch (e) {
+            mostrarMensagem("Não foi possível carregar os serviços deste barbeiro.", "erro");
+        }
+    });
     inpNome.addEventListener("input", atualizarResumo);
 
     // máscara simples de telefone: (61) 99999-9999

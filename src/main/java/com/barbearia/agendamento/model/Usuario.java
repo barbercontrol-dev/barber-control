@@ -1,10 +1,13 @@
 package com.barbearia.agendamento.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 
@@ -19,20 +22,33 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true)
     private String email;
 
     // WRITE_ONLY: a API aceita a senha na entrada (cadastro/login), mas nunca a devolve nas respostas
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    @Column(nullable = false)
     private String senha;
 
     private String nome;
 
-    private String role; // ex: ADMIN, ADMIN gerencia tudo. Como a barbearia só tem administradores, todas as contas criadas terão role = "ADMIN".
+    @Column(length = 20, unique = true)
+    private String cpf;
 
-    @Column(nullable = false)
+    @Column(length = 20)
+    private String telefone;
+
+    private String nomeBarbearia;
+
+    private String role;
+
     private Boolean consentimentoLgpd;
 
     private LocalDateTime dataConsentimento;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "barbearia_id")
+    @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Usuario barbearia;
 }

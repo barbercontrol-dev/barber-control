@@ -5,7 +5,8 @@ const btnCadastrar = document.getElementById("btn-cadastrar");
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
-  const nome = document.getElementById("nome").value.trim();
+  const nomeBarbearia = document.getElementById("nome-barbearia").value.trim();
+  const nomeResponsavel = document.getElementById("nome-responsavel").value.trim();
   const email = document.getElementById("email").value.trim();
   const senha = document.getElementById("senha").value;
   const repetirSenha = document.getElementById("repetir-senha").value;
@@ -31,11 +32,10 @@ form.addEventListener("submit", async (event) => {
   btnCadastrar.textContent = "Cadastrando...";
 
   try {
-    await apiRegistrar(nome, email, senha);
+    await apiRegistrar(nomeBarbearia, nomeResponsavel, email, senha);
     window.location.href = "login.html";
   } catch (error) {
-    erroEl.textContent =
-        "Não foi possível criar a conta. Verifique os dados e tente novamente.";
+    erroEl.textContent = error.message || "Não foi possível criar a conta. Verifique os dados e tente novamente.";
     erroEl.classList.add("visivel");
   } finally {
     btnCadastrar.disabled = false;

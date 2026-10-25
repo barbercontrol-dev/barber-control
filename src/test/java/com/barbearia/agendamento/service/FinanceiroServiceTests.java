@@ -2,6 +2,7 @@ package com.barbearia.agendamento.service;
 
 import com.barbearia.agendamento.dto.MovimentoFinanceiroRequest;
 import com.barbearia.agendamento.dto.MovimentoFinanceiroResponse;
+import com.barbearia.agendamento.dto.ResumoFinanceiroResponse;
 import com.barbearia.agendamento.model.Agendamento;
 import com.barbearia.agendamento.model.MovimentoFinanceiro;
 import com.barbearia.agendamento.model.Servico;
@@ -50,10 +51,13 @@ class FinanceiroServiceTests {
     void registraEntradaComTotalCalculadoDosServicosPersistidos() {
         Servico corte = new Servico(1L, "Corte", new BigDecimal("45.00"), 30);
         Servico barba = new Servico(2L, "Barba", new BigDecimal("25.00"), 20);
+        corte.setBarbeariaId(5L);
+        barba.setBarbeariaId(5L);
         when(servicoRepository.findAllById(List.of(1L, 2L))).thenReturn(List.of(corte, barba));
         when(movimentoRepository.save(any(MovimentoFinanceiro.class)))
                 .thenAnswer(invocacao -> invocacao.getArgument(0));
         Usuario usuario = new Usuario();
+        usuario.setId(5L);
         usuario.setNome("Alex");
 
         MovimentoFinanceiroRequest request = new MovimentoFinanceiroRequest(
@@ -121,8 +125,12 @@ class FinanceiroServiceTests {
     @Test
     void criaUmaEntradaVinculadaAoAgendamentoConcluido() {
         Servico corte = new Servico(12L, "Corte", new BigDecimal("45.00"), 30);
+        Usuario responsavel = new Usuario();
+        responsavel.setId(21L);
+        responsavel.setNome("Barbearia Central");
         Usuario barbeiro = new Usuario();
         barbeiro.setNome("Alex");
+        barbeiro.setBarbearia(responsavel);
         Agendamento agendamento = new Agendamento(
                 37L,
                 barbeiro,
@@ -144,6 +152,7 @@ class FinanceiroServiceTests {
         assertEquals("ENTRADA", movimento.getTipo());
         assertEquals("PIX", movimento.getFormaPagamento());
         assertEquals(new BigDecimal("45.00"), movimento.getValor());
+        assertEquals(responsavel, movimento.getUsuario());
         assertEquals(agendamento, movimento.getAgendamento());
         assertEquals(12L, movimento.getServicos().get(0).getServicoId());
     }
@@ -166,5 +175,44 @@ class FinanceiroServiceTests {
         financeiroService.registrarEntradaAgendamento(agendamento, "PIX");
 
         verify(movimentoRepository, never()).save(any());
+    }
+
+    @Test
+    void resumoIncluiAtendimentosConcluidosSemDuplicarEntradasVinculadas() {
+        LocalDate inicio = LocalDate.of(2026, 10, 1);
+        LocalDate fim = LocalDate.of(2026, 10, 31);
+
+        Servico corte = new Servico(12L, "Corte", new BigDecimal("50.00"), 30);
+        Agendamento agendamento = new Agendamento(
+                37L,
+                new Usuario(),
+                corte,
+                "Cliente",
+                null,
+                LocalDate.of(2026, 10, 19).atTime(14, 30),
+                "CONCLUIDO"
+        );
+        MovimentoFinanceiro entradaVinculada = new MovimentoFinanceiro();
+        entradaVinculada.setValor(new BigDecimal("45.00"));
+        entradaVinculada.setAgendamento(agendamento);
+        MovimentoFinanceiro entradaManual = new MovimentoFinanceiro();
+        entradaManual.setValor(new BigDecimal("12.00"));
+        MovimentoFinanceiro gasto = new MovimentoFinanceiro();
+        gasto.setValor(new BigDecimal("10.00"));
+
+        when(movimentoRepository.findByUsuarioIdAndTipoAndDataBetweenOrderByDataDescIdDesc(
+                21L, "ENTRADA", inicio, fim)).thenReturn(List.of(entradaVinculada, entradaManual));
+        when(movimentoRepository.findByUsuarioIdAndTipoAndDataBetweenOrderByDataDescIdDesc(
+                21L, "SAIDA", inicio, fim)).thenReturn(List.of(gasto));
+        when(agendamentoRepository.findConcluidosDaBarbearia(
+                21L, inicio.atStartOfDay(), fim.plusDays(1).atStartOfDay()))
+                .thenReturn(List.of(agendamento));
+
+        ResumoFinanceiroResponse resumo = financeiroService.resumir(21L, inicio, fim);
+
+        assertEquals(new BigDecimal("57.00"), resumo.faturamento());
+        assertEquals(new BigDecimal("10.00"), resumo.gastos());
+        assertEquals(new BigDecimal("47.00"), resumo.lucro());
+        assertEquals(2, resumo.atendimentos());
     }
 }

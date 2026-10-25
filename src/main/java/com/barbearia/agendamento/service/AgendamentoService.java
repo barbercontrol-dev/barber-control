@@ -7,6 +7,7 @@ import com.barbearia.agendamento.repository.ServicoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.LocalDate;
@@ -25,8 +26,12 @@ public class AgendamentoService {
     @Autowired
     private FinanceiroService financeiroService;
 
+    @Transactional
     public Agendamento criarAgendamento(Agendamento agendamento) {
-        Servico servicoCompleto = buscarServicoCompleto(agendamento.getServico().getId());
+        Long barbeariaId = agendamento.getBarbeiro().getBarbearia() != null
+                ? agendamento.getBarbeiro().getBarbearia().getId()
+                : agendamento.getBarbeiro().getId();
+        Servico servicoCompleto = buscarServicoCompleto(agendamento.getServico().getId(), barbeariaId);
         agendamento.setServico(servicoCompleto);
 
         validarDisponibilidade(agendamento, null);
@@ -42,6 +47,13 @@ public class AgendamentoService {
         return agendamentoRepository.findByBarbeiroId(barbeiroId);
     }
 
+    public List<Agendamento> listarDaBarbearia(Long barbeariaId, Long barbeiroId) {
+        if (barbeiroId == null) {
+            return agendamentoRepository.findByBarbearia(barbeariaId);
+        }
+        return agendamentoRepository.findByBarbeiroDaBarbearia(barbeiroId, barbeariaId);
+    }
+
     public Optional<Agendamento> buscarPorId(Long id) {
         return agendamentoRepository.findById(id);
     }
@@ -50,12 +62,20 @@ public class AgendamentoService {
         return agendamentoRepository.findByIdAndBarbeiroId(id, barbeiroId);
     }
 
+    public Optional<Agendamento> buscarPorIdDaBarbearia(Long id, Long barbeariaId) {
+        return agendamentoRepository.findByIdAndBarbearia(id, barbeariaId);
+    }
+
+    @Transactional
     public Agendamento atualizarAgendamento(Long id, Agendamento agendamentoAtualizado) {
         Optional<Agendamento> existente = agendamentoRepository.findById(id);
         if (existente.isPresent()) {
             Agendamento agendamento = existente.get();
             agendamentoAtualizado.setBarbeiro(agendamento.getBarbeiro());
-            Servico servicoCompleto = buscarServicoCompleto(agendamentoAtualizado.getServico().getId());
+            Long barbeariaId = agendamento.getBarbeiro().getBarbearia() != null
+                    ? agendamento.getBarbeiro().getBarbearia().getId()
+                    : agendamento.getBarbeiro().getId();
+            Servico servicoCompleto = buscarServicoCompleto(agendamentoAtualizado.getServico().getId(), barbeariaId);
             agendamentoAtualizado.setServico(servicoCompleto);
 
             validarDisponibilidade(agendamentoAtualizado, id);
@@ -100,9 +120,9 @@ public class AgendamentoService {
         });
     }
 
-    private Servico buscarServicoCompleto(Long servicoId) {
-        return servicoRepository.findById(servicoId)
-                .orElseThrow(() -> new IllegalArgumentException("Serviço não encontrado com id: " + servicoId));
+    private Servico buscarServicoCompleto(Long servicoId, Long barbeariaId) {
+        return servicoRepository.findByIdAndBarbeariaId(servicoId, barbeariaId)
+                .orElseThrow(() -> new IllegalArgumentException("Serviço não encontrado nesta barbearia."));
     }
 
     // Verifica se o novo horário sobrepõe algum agendamento já existente do mesmo barbeiro

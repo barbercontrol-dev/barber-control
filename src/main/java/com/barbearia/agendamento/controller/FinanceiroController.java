@@ -58,6 +58,20 @@ public class FinanceiroController {
         }
     }
 
+    @GetMapping("/resumo")
+    public ResponseEntity<?> resumir(
+            @RequestParam LocalDate inicio,
+            @RequestParam LocalDate fim,
+            Authentication authentication
+    ) {
+        try {
+            Usuario usuario = usuarioService.buscarResponsavel(authentication.getName());
+            return ResponseEntity.ok(financeiroService.resumir(usuario.getId(), inicio, fim));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
+        }
+    }
+
     @GetMapping
     public ResponseEntity<?> listar(
             @RequestParam String tipo,

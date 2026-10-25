@@ -15,23 +15,24 @@ public class ServicoService {
     private ServicoRepository servicoRepository;
 
     // Criar nov o serviço
-    public Servico criarServico(Servico servico) {
+    public Servico criarServico(Servico servico, Long barbeariaId) {
+        servico.setBarbeariaId(barbeariaId);
         return servicoRepository.save(servico);
     }
 
 
-    public List<Servico> listarTodos() {
-        return servicoRepository.findAll();
+    public List<Servico> listarTodos(Long barbeariaId) {
+        return servicoRepository.findByBarbeariaIdOrderById(barbeariaId);
     }
 
 
-    public Optional<Servico> buscarPorId(Long id) {
-        return servicoRepository.findById(id);
+    public Optional<Servico> buscarPorId(Long id, Long barbeariaId) {
+        return servicoRepository.findByIdAndBarbeariaId(id, barbeariaId);
     }
 
 
-    public Servico atualizarServico(Long id, Servico servicoAtualizado) {
-        Optional<Servico> servicoExistente = servicoRepository.findById(id);
+    public Servico atualizarServico(Long id, Servico servicoAtualizado, Long barbeariaId) {
+        Optional<Servico> servicoExistente = servicoRepository.findByIdAndBarbeariaId(id, barbeariaId);
         if (servicoExistente.isPresent()) {
             Servico servico = servicoExistente.get();
             servico.setNome(servicoAtualizado.getNome());
@@ -44,7 +45,12 @@ public class ServicoService {
     }
 
 
-    public void deletarServico(Long id) {
-        servicoRepository.deleteById(id);
+    public boolean deletarServico(Long id, Long barbeariaId) {
+        return servicoRepository.findByIdAndBarbeariaId(id, barbeariaId)
+                .map(servico -> {
+                    servicoRepository.delete(servico);
+                    return true;
+                })
+                .orElse(false);
     }
 }

@@ -1,6 +1,7 @@
 package com.barbearia.agendamento.controller;
 
 import com.barbearia.agendamento.model.Usuario;
+import com.barbearia.agendamento.dto.RegistroBarbeariaRequest;
 import com.barbearia.agendamento.security.JwtUtil;
 import com.barbearia.agendamento.service.UsuarioService;
 
@@ -25,15 +26,27 @@ public class AuthController {
     private JwtUtil jwtUtil;
 
     @PostMapping("/registrar")
-    public Usuario registrar(@RequestBody Usuario usuario) {
-        return usuarioService.cadastrar(usuario);
+    public ResponseEntity<?> registrar(@RequestBody RegistroBarbeariaRequest request) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED).body(usuarioService.cadastrarBarbearia(
+                    request.nomeBarbearia(),
+                    request.nomeResponsavel(),
+                    request.email(),
+                    request.senha(),
+                    request.consentimentoLgpd()
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
+        }
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Usuario usuario) {
         var usuarioOpt = usuarioService.buscarPorEmail(usuario.getEmail());
 
-        if (usuarioOpt.isPresent() && usuarioService.validarSenha(usuario.getSenha(), usuarioOpt.get().getSenha())) {
+        if (usuarioOpt.isPresent()
+                && "ADMIN".equals(usuarioOpt.get().getRole())
+                && usuarioService.validarSenha(usuario.getSenha(), usuarioOpt.get().getSenha())) {
             String token = jwtUtil.generateToken(usuarioOpt.get().getEmail());
             return ResponseEntity.ok(Map.of("token", token));
         }

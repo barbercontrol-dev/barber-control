@@ -571,6 +571,37 @@ body {
   max-width: 100%;
 }
 
+.seletor-agenda-barbeiro {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  background: #1c1714;
+  border: 1px solid #ffc107;
+  border-radius: 10px;
+}
+
+.seletor-agenda-barbeiro label {
+  color: #f2f2f2;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.seletor-agenda-barbeiro select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ffc107;
+  border-radius: 6px;
+  background: #241e19;
+  color: #f2f2f2;
+}
+
+.seletor-agenda-barbeiro p {
+  color: #b8ada5;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 .novo-agendamento {
   display: flex;
   flex-direction: column;
@@ -773,6 +804,10 @@ body {
 }
 
 .btn-excluir-servico:hover {
+  color: #c62828;
+}
+
+.btn-excluir-barbeiro:hover {
   color: #c62828;
 }
 

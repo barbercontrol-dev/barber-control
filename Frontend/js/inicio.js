@@ -3,7 +3,7 @@ let servicosDisponiveis = [];
 let todosAgendamentos = [];
 let entradasDoMes = [];
 let gastosDoMes = [];
-let atendimentosPendentesMes = [];
+let resumoFinanceiroMes = null;
 let fluxoChart = null;
 let servicosChart = null;
 
@@ -52,7 +52,7 @@ async function identificarBarbeiroLogado() {
   barbeiroAtual = usuarios.find((u) => u.email === payload.sub) || null;
 
   if (barbeiroAtual) {
-    profileNameEl.textContent = barbeiroAtual.nome;
+    profileNameEl.textContent = barbeiroAtual.nomeBarbearia || barbeiroAtual.nome;
     saudacaoEl.textContent = `Olá, ${barbeiroAtual.nome}!`;
   }
 }
@@ -119,22 +119,36 @@ function obterPeriodoAtual() {
   return { inicio: dataLocal(inicio), fim: dataLocal(hoje), dias };
 }
 
-function valorMovimentos(movimentos) {
-  return movimentos.reduce((total, movimento) => total + Number(movimento.valor || 0), 0);
+function atendimentosConcluidosDoMes() {
+  const periodo = obterPeriodoAtual();
+  return todosAgendamentos.filter((agendamento) => {
+    const data = String(agendamento.dataHora || "").slice(0, 10);
+    return agendamento.status === "CONCLUIDO" && data >= periodo.inicio && data <= periodo.fim;
+  });
+}
+
+function entradasManuaisDoMes() {
+  return entradasDoMes.filter((entrada) => !entrada.agendamentoId);
+}
+
+function entradasDoPainel() {
+  return [
+    ...entradasManuaisDoMes(),
+    ...atendimentosConcluidosDoMes().map((agendamento) => ({
+      data: String(agendamento.dataHora).slice(0, 10),
+      valor: agendamento.servico?.valor,
+      servicos: [{ nome: agendamento.servico?.nome }],
+    })),
+  ];
 }
 
 function atualizarIndicadores() {
-  const faturamento = valorMovimentos(entradasDoMes) + atendimentosPendentesMes.reduce(
-    (total, atendimento) => total + Number(atendimento.valor || 0),
-    0,
-  );
-  const gastos = valorMovimentos(gastosDoMes);
-  const quantidadeAtendimentos = entradasDoMes.length + atendimentosPendentesMes.length;
-
-  document.getElementById("faturamento-mes").textContent = moedaBRL.format(faturamento);
-  document.getElementById("gastos-mes").textContent = moedaBRL.format(gastos);
-  document.getElementById("lucro-mes").textContent = moedaBRL.format(faturamento - gastos);
-  document.getElementById("atendimentos-mes").textContent = quantidadeAtendimentos.toLocaleString("pt-BR");
+  if (!resumoFinanceiroMes) return;
+  document.getElementById("faturamento-mes").textContent = moedaBRL.format(resumoFinanceiroMes.faturamento);
+  document.getElementById("gastos-mes").textContent = moedaBRL.format(resumoFinanceiroMes.gastos);
+  document.getElementById("lucro-mes").textContent = moedaBRL.format(resumoFinanceiroMes.lucro);
+  document.getElementById("atendimentos-mes").textContent =
+    Number(resumoFinanceiroMes.atendimentos).toLocaleString("pt-BR");
 }
 
 function criarConjuntoDiario(movimentos, dias) {
@@ -150,13 +164,7 @@ function criarConjuntoDiario(movimentos, dias) {
 
 function renderizarGraficoFluxoFinanceiro() {
   const { dias } = obterPeriodoAtual();
-  const entradas = [
-    ...entradasDoMes,
-    ...atendimentosPendentesMes.map((atendimento) => ({
-      data: atendimento.data,
-      valor: atendimento.valor,
-    })),
-  ];
+  const entradas = entradasDoPainel();
 
   if (fluxoChart) fluxoChart.destroy();
   fluxoChart = new Chart(document.getElementById("fluxoFinanceiroChart"), {
@@ -210,10 +218,7 @@ function renderizarGraficoFluxoFinanceiro() {
 
 function renderizarGraficoServicos() {
   const contagem = new Map();
-  const servicosRealizados = [
-    ...entradasDoMes.flatMap((entrada) => entrada.servicos || []),
-    ...atendimentosPendentesMes.map((atendimento) => ({ nome: atendimento.servicoNome })),
-  ];
+  const servicosRealizados = entradasDoPainel().flatMap((entrada) => entrada.servicos || []);
   servicosRealizados.forEach((servico) => {
     const nomeServico = servico.nome || "Serviço não informado";
     contagem.set(nomeServico, (contagem.get(nomeServico) || 0) + 1);
@@ -259,23 +264,19 @@ async function carregarFinanceiroDoMes() {
     });
     return apiFetch(`/api/financeiro?${parametros}`);
   };
-  const parametrosPendentes = new URLSearchParams({
-    inicio: periodo.inicio,
-    fim: periodo.fim,
-  });
-  const [respEntradas, respGastos, respPendentes] = await Promise.all([
+  const [respEntradas, respGastos, respResumo] = await Promise.all([
     consulta("ENTRADA"),
     consulta("SAIDA"),
-    apiFetch(`/api/financeiro/atendimentos-pendentes?${parametrosPendentes}`),
+    apiFetch(`/api/financeiro/resumo?inicio=${periodo.inicio}&fim=${periodo.fim}`),
   ]);
-  if (!respEntradas || !respGastos || !respPendentes) return;
-  if (!respEntradas.ok || !respGastos.ok || !respPendentes.ok) {
+  if (!respEntradas || !respGastos || !respResumo) return;
+  if (!respEntradas.ok || !respGastos.ok || !respResumo.ok) {
     throw new Error("Não foi possível carregar os dados financeiros deste mês.");
   }
-  [entradasDoMes, gastosDoMes, atendimentosPendentesMes] = await Promise.all([
+  [entradasDoMes, gastosDoMes, resumoFinanceiroMes] = await Promise.all([
     respEntradas.json(),
     respGastos.json(),
-    respPendentes.json(),
+    respResumo.json(),
   ]);
 }
 

@@ -312,15 +312,21 @@
 
         <form id="form-cadastro">
           <div class="field">
-            <label for="nome"
-              >Nome completo <span class="required">*</span></label
-            >
+            <label for="nome-barbearia">Nome da barbearia <span class="required">*</span></label>
+            <div class="input-wrap">
+              <input type="text" id="nome-barbearia" name="nome-barbearia" maxlength="120" required />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="nome-responsavel">Nome do responsável <span class="required">*</span></label>
             <div class="input-wrap">
               <input
                 type="text"
-                id="nome"
-                name="nome"
+                id="nome-responsavel"
+                name="nome-responsavel"
                 autocomplete="name"
+                maxlength="120"
                 required
               />
             </div>
@@ -338,7 +344,7 @@
               >Criar senha <span class="required">*</span></label
             >
             <div class="input-wrap">
-              <input type="password" id="senha" name="senha" required />
+              <input type="password" id="senha" name="senha" minlength="8" required />
               <button
                 type="button"
                 class="toggle-visibility"

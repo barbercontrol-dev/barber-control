@@ -14,15 +14,22 @@ async function apiLogin(email, senha) {
   return response.json();
 }
 
-async function apiRegistrar(nome, email, senha) {
+async function apiRegistrar(nomeBarbearia, nomeResponsavel, email, senha) {
   const response = await fetch(`${API_URL}/auth/registrar`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nome, email, senha, consentimentoLgpd: true }),
+    body: JSON.stringify({
+      nomeBarbearia,
+      nomeResponsavel,
+      email,
+      senha,
+      consentimentoLgpd: true,
+    }),
   });
 
   if (!response.ok) {
-    throw new Error("Não foi possível criar a conta");
+    const erro = await response.json().catch(() => ({}));
+    throw new Error(erro.erro || "Não foi possível criar a conta");
   }
 
   return response.json();
@@ -45,7 +52,7 @@ async function apiFetch(endpoint, options = {}) {
     },
   });
 
-  if (response.status === 401 || response.status === 403) {
+  if (response.status === 401) {
     localStorage.removeItem("token");
     window.location.href = "login.html";
     return null;

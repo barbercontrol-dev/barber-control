@@ -3,6 +3,7 @@ package com.barbearia.agendamento.service;
 import com.barbearia.agendamento.dto.AtendimentoPendenteFinanceiroResponse;
 import com.barbearia.agendamento.dto.MovimentoFinanceiroRequest;
 import com.barbearia.agendamento.dto.MovimentoFinanceiroResponse;
+import com.barbearia.agendamento.dto.ResumoFinanceiroResponse;
 import com.barbearia.agendamento.model.Agendamento;
 import com.barbearia.agendamento.model.MovimentoFinanceiro;
 import com.barbearia.agendamento.model.Servico;
@@ -86,7 +87,8 @@ public class FinanceiroService {
         movimento.setNomeCliente(agendamento.getClienteNome());
         movimento.setFormaPagamento(formaPagamento);
         movimento.setValor(servico.getValor());
-        movimento.setUsuario(agendamento.getBarbeiro());
+        Usuario barbeiro = agendamento.getBarbeiro();
+        movimento.setUsuario(barbeiro.getBarbearia() != null ? barbeiro.getBarbearia() : barbeiro);
         movimento.setAgendamento(agendamento);
 
         ServicoMovimentoFinanceiro item = new ServicoMovimentoFinanceiro();
@@ -166,6 +168,61 @@ public class FinanceiroService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public ResumoFinanceiroResponse resumir(
+            Long usuarioId,
+            LocalDate inicio,
+            LocalDate fim
+    ) {
+        if (inicio == null || fim == null || inicio.isAfter(fim)) {
+            throw new IllegalArgumentException("Informe um período válido.");
+        }
+
+        List<MovimentoFinanceiro> entradas =
+                movimentoRepository.findByUsuarioIdAndTipoAndDataBetweenOrderByDataDescIdDesc(
+                        usuarioId, "ENTRADA", inicio, fim);
+        List<MovimentoFinanceiro> gastos =
+                movimentoRepository.findByUsuarioIdAndTipoAndDataBetweenOrderByDataDescIdDesc(
+                        usuarioId, "SAIDA", inicio, fim);
+        List<Agendamento> concluidos = agendamentoRepository.findConcluidosDaBarbearia(
+                usuarioId, inicio.atStartOfDay(), fim.plusDays(1).atStartOfDay());
+
+        Map<Long, MovimentoFinanceiro> entradasPorAgendamento = new HashMap<>();
+        entradas.stream()
+                .filter(movimento -> movimento.getAgendamento() != null)
+                .forEach(movimento -> entradasPorAgendamento.put(
+                        movimento.getAgendamento().getId(), movimento));
+
+        BigDecimal faturamento = entradas.stream()
+                .filter(movimento -> movimento.getAgendamento() == null)
+                .map(MovimentoFinanceiro::getValor)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        for (Agendamento agendamento : concluidos) {
+            MovimentoFinanceiro entrada = entradasPorAgendamento.get(agendamento.getId());
+            if (entrada != null) {
+                faturamento = faturamento.add(entrada.getValor());
+            } else {
+                if (agendamento.getServico() == null || agendamento.getServico().getValor() == null) {
+                    throw new IllegalStateException("Um atendimento concluído não possui valor de serviço.");
+                }
+                faturamento = faturamento.add(agendamento.getServico().getValor());
+            }
+        }
+
+        BigDecimal totalGastos = gastos.stream()
+                .map(MovimentoFinanceiro::getValor)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        long quantidadeAtendimentos = concluidos.size()
+                + entradas.stream().filter(movimento -> movimento.getAgendamento() == null).count();
+
+        return new ResumoFinanceiroResponse(
+                faturamento,
+                totalGastos,
+                faturamento.subtract(totalGastos),
+                quantidadeAtendimentos
+        );
+    }
+
     private BigDecimal registrarServicos(List<Long> servicoIds, MovimentoFinanceiro movimento) {
         if (servicoIds == null || servicoIds.isEmpty()) {
             throw new IllegalArgumentException("Selecione ao menos um serviço.");
@@ -176,7 +233,11 @@ public class FinanceiroService {
         }
 
         Map<Long, Servico> servicosPorId = new HashMap<>();
-        servicoRepository.findAllById(servicoIds).forEach(servico -> servicosPorId.put(servico.getId(), servico));
+        servicoRepository.findAllById(servicoIds).forEach(servico -> {
+            if (movimento.getUsuario().getId().equals(servico.getBarbeariaId())) {
+                servicosPorId.put(servico.getId(), servico);
+            }
+        });
         if (servicosPorId.size() != servicoIds.size()) {
             throw new IllegalArgumentException("Um ou mais serviços selecionados não existem.");
         }

@@ -178,7 +178,7 @@ async function carregarPerfil() {
   const token = localStorage.getItem("token");
   const payload = token ? JSON.parse(atob(token.split(".")[1])) : null;
   const usuario = usuarios.find((item) => item.email === payload?.sub);
-  if (usuario) profileNameEl.textContent = usuario.nome;
+  if (usuario) profileNameEl.textContent = usuario.nomeBarbearia || usuario.nome;
 }
 
 Promise.all([carregarPerfil(), carregarServicos()]);
