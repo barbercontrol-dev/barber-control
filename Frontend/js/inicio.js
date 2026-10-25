@@ -68,24 +68,19 @@ function ehHoje(dataHoraStr) {
   );
 }
 
-function meusAgendamentos(lista) {
-  if (!barbeiroAtual) return lista;
-  return lista.filter((a) => a.barbeiro && a.barbeiro.id === barbeiroAtual.id);
-}
-
 // ===== Lista "Agendamentos de hoje" =====
 function renderizarListaHoje() {
-  const hojeDoBarbeiro = meusAgendamentos(todosAgendamentos)
+  const agendamentosDeHoje = todosAgendamentos
       .filter((a) => ehHoje(a.dataHora))
       .sort((a, b) => new Date(a.dataHora) - new Date(b.dataHora));
 
-  totalAgendamentosEl.textContent = hojeDoBarbeiro.length.toLocaleString("pt-BR");
-  if (hojeDoBarbeiro.length === 0) {
+  totalAgendamentosEl.textContent = agendamentosDeHoje.length.toLocaleString("pt-BR");
+  if (agendamentosDeHoje.length === 0) {
     listaHojeEl.innerHTML = `<p style="text-align:center;color:#999;font-size:13.5px;">Nenhum agendamento para hoje.</p>`;
     return;
   }
 
-  listaHojeEl.innerHTML = hojeDoBarbeiro
+  listaHojeEl.innerHTML = agendamentosDeHoje
       .map((a) => {
         const hora = new Date(a.dataHora).toLocaleTimeString("pt-BR", {
           hour: "2-digit",
