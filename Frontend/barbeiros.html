@@ -17,14 +17,37 @@
         <div class="profile-name" id="profile-name">Barbearia</div>
       </div>
       <ul class="nav-menu">
-        <li class="nav-item"><a href="index.html" class="nav-link"><i class="fa-solid fa-house"></i> Início</a></li>
-        <li class="nav-item"><a href="agendamento.html" class="nav-link"><i class="fa-regular fa-calendar-days"></i> Agendamentos</a></li>
-        <li class="nav-item"><a href="servicos.html" class="nav-link"><i class="fa-solid fa-bars"></i> Serviços</a></li>
-        <li class="nav-item"><a href="barbeiros.html" class="nav-link active"><i class="fa-solid fa-user-group"></i> Barbeiros</a></li>
+        <li class="nav-item">
+          <a href="index.html" class="nav-link"
+            ><i class="fa-solid fa-house"></i> Início</a
+          >
+        </li>
+        <li class="nav-item">
+          <a href="agendamento.html" class="nav-link"
+            ><i class="fa-regular fa-calendar-days"></i> Agendamentos</a
+          >
+        </li>
+        <li class="nav-item">
+          <a href="servicos.html" class="nav-link"
+            ><i class="fa-solid fa-bars"></i> Serviços</a
+          >
+        </li>
+        <li class="nav-item">
+          <a href="barbeiros.html" class="nav-link active"
+            ><i class="fa-solid fa-user-group"></i> Barbeiros</a
+          >
+        </li>
         <li class="nav-item nav-financeiro">
-          <button type="button" class="nav-link nav-financeiro-toggle" aria-expanded="false">
+          <button
+            type="button"
+            class="nav-link nav-financeiro-toggle"
+            aria-expanded="false"
+          >
             <i class="fa-solid fa-wallet"></i> Financeiro
-            <i class="fa-solid fa-chevron-down nav-financeiro-chevron" aria-hidden="true"></i>
+            <i
+              class="fa-solid fa-chevron-down nav-financeiro-chevron"
+              aria-hidden="true"
+            ></i>
           </button>
           <ul class="nav-financeiro-submenu">
             <li><a href="financeiro-entradas.html">Entrada</a></li>
@@ -32,7 +55,9 @@
           </ul>
         </li>
         <li class="nav-item" style="border: none">
-          <a href="login.html" id="btn-logout" class="nav-link"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sair</a>
+          <a href="login.html" id="btn-logout" class="nav-link"
+            ><i class="fa-solid fa-arrow-right-from-bracket"></i> Sair</a
+          >
         </li>
       </ul>
     </aside>
@@ -41,51 +66,99 @@
       <section class="servicos-page">
         <div class="welcome-header">
           <h1>Barbeiros</h1>
-          <p>Cadastre os profissionais da sua barbearia para organizar as agendas.</p>
+          <p>
+            Cadastre os profissionais da sua barbearia para organizar as
+            agendas.
+          </p>
         </div>
         <div class="servicos-panel">
           <div class="servicos-toolbar">
             <span></span>
-            <button type="button" class="btn-servico-principal" id="btn-adicionar-barbeiro">
+            <button
+              type="button"
+              class="btn-servico-principal"
+              id="btn-adicionar-barbeiro"
+            >
               <i class="fa-solid fa-plus"></i> Adicionar barbeiro
             </button>
           </div>
           <div class="servicos-table-wrap">
             <table class="servicos-table">
-              <thead><tr><th>Nome</th><th>Telefone</th><th>CPF</th><th>Ações</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Telefone</th>
+                  <th>CPF</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
               <tbody id="lista-barbeiros"></tbody>
             </table>
-            <p class="servicos-vazio" id="barbeiros-vazio">Nenhum barbeiro cadastrado.</p>
+            <p class="servicos-vazio" id="barbeiros-vazio">
+              Nenhum barbeiro cadastrado.
+            </p>
           </div>
         </div>
       </section>
     </main>
 
-    <div class="modal" id="modal-barbeiro" role="dialog" aria-modal="true" aria-labelledby="modal-barbeiro-titulo">
+    <div
+      class="modal"
+      id="modal-barbeiro"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-barbeiro-titulo"
+    >
       <div class="modal-content servico-modal-content">
         <h3 id="modal-barbeiro-titulo">Adicionar barbeiro</h3>
         <form id="form-barbeiro">
           <div class="campo-servico">
             <label for="barbeiro-nome">Nome</label>
-            <input type="text" id="barbeiro-nome" required maxlength="120" autocomplete="name" />
+            <input
+              type="text"
+              id="barbeiro-nome"
+              required
+              maxlength="120"
+              autocomplete="name"
+            />
           </div>
           <div class="campo-servico">
             <label for="barbeiro-telefone">Telefone</label>
-            <input type="tel" id="barbeiro-telefone" required maxlength="15" autocomplete="tel" placeholder="(11) 99999-9999" />
+            <input
+              type="tel"
+              id="barbeiro-telefone"
+              required
+              maxlength="15"
+              autocomplete="tel"
+              placeholder="(11) 99999-9999"
+            />
           </div>
           <div class="campo-servico">
             <label for="barbeiro-cpf">CPF</label>
-            <input type="text" id="barbeiro-cpf" required maxlength="14" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" />
+            <input
+              type="text"
+              id="barbeiro-cpf"
+              required
+              maxlength="14"
+              inputmode="numeric"
+              autocomplete="off"
+              placeholder="000.000.000-00"
+            />
           </div>
           <p class="servico-form-erro" id="barbeiro-form-erro" role="alert"></p>
           <div class="modal-actions">
-            <button type="button" class="btn-cancel" id="btn-cancelar-barbeiro">Cancelar</button>
-            <button type="submit" class="btn-save" id="btn-salvar-barbeiro">Salvar</button>
+            <button type="button" class="btn-cancel" id="btn-cancelar-barbeiro">
+              Cancelar
+            </button>
+            <button type="submit" class="btn-save" id="btn-salvar-barbeiro">
+              Salvar
+            </button>
           </div>
         </form>
       </div>
     </div>
 
+    <script src="js/config.js"></script>
     <script src="js/api.js"></script>
     <script src="js/menu-financeiro.js"></script>
     <script src="js/barbeiros.js"></script>

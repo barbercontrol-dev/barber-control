@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8080";
+const API_URL = window.API_BASE_URL;
 
 async function apiLogin(email, senha) {
   const response = await fetch(`${API_URL}/auth/login`, {

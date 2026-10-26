@@ -47,9 +47,16 @@
           >
         </li>
         <li class="nav-item nav-financeiro">
-          <button type="button" class="nav-link nav-financeiro-toggle" aria-expanded="false">
+          <button
+            type="button"
+            class="nav-link nav-financeiro-toggle"
+            aria-expanded="false"
+          >
             <i class="fa-solid fa-wallet"></i> Financeiro
-            <i class="fa-solid fa-chevron-down nav-financeiro-chevron" aria-hidden="true"></i>
+            <i
+              class="fa-solid fa-chevron-down nav-financeiro-chevron"
+              aria-hidden="true"
+            ></i>
           </button>
           <ul class="nav-financeiro-submenu">
             <li><a href="financeiro-entradas.html">Entrada</a></li>
@@ -77,22 +84,30 @@
         <div class="cards-grid dashboard-financeiro-cards">
           <div class="card card-dark">
             <div class="card-title">Faturamento</div>
-            <div class="card-value dashboard-kpi-value" id="faturamento-mes">R$ 0,00</div>
+            <div class="card-value dashboard-kpi-value" id="faturamento-mes">
+              R$ 0,00
+            </div>
             <div class="dashboard-kpi-caption">No mês atual</div>
           </div>
           <div class="card card-yellow">
             <div class="card-title">Gastos</div>
-            <div class="card-value dashboard-kpi-value" id="gastos-mes">R$ 0,00</div>
+            <div class="card-value dashboard-kpi-value" id="gastos-mes">
+              R$ 0,00
+            </div>
             <div class="dashboard-kpi-caption">No mês atual</div>
           </div>
           <div class="card card-dark">
             <div class="card-title">Lucro</div>
-            <div class="card-value dashboard-kpi-value" id="lucro-mes">R$ 0,00</div>
+            <div class="card-value dashboard-kpi-value" id="lucro-mes">
+              R$ 0,00
+            </div>
             <div class="dashboard-kpi-caption">Faturamento menos gastos</div>
           </div>
           <div class="card card-yellow">
             <div class="card-title">Atendimentos realizados</div>
-            <div class="card-value dashboard-kpi-value" id="atendimentos-mes">0</div>
+            <div class="card-value dashboard-kpi-value" id="atendimentos-mes">
+              0
+            </div>
             <div class="dashboard-kpi-caption">Concluídos neste mês</div>
           </div>
         </div>
@@ -104,16 +119,22 @@
               <p>Movimentação diária deste mês</p>
             </div>
             <div class="chart-container">
-              <canvas id="fluxoFinanceiroChart" aria-label="Gráfico diário de entradas e gastos"></canvas>
+              <canvas
+                id="fluxoFinanceiroChart"
+                aria-label="Gráfico diário de entradas e gastos"
+              ></canvas>
             </div>
           </div>
           <div class="chart-section">
-          <div class="section-title">
+            <div class="section-title">
               <h2>Serviços realizados</h2>
               <p>Atendimentos concluídos por serviço</p>
-          </div>
+            </div>
             <div class="chart-container">
-              <canvas id="servicosRealizadosChart" aria-label="Gráfico dos serviços realizados no mês"></canvas>
+              <canvas
+                id="servicosRealizadosChart"
+                aria-label="Gráfico dos serviços realizados no mês"
+              ></canvas>
             </div>
           </div>
         </div>
@@ -153,6 +174,7 @@
       </div>
     </main>
 
+    <script src="js/config.js"></script>
     <script src="js/api.js"></script>
     <script src="js/menu-financeiro.js"></script>
     <script src="js/inicio.js"></script>

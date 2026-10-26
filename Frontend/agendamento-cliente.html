@@ -1,507 +1,556 @@
 <!doctype html>
 <html lang="pt-BR">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link
-            rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
     <link rel="stylesheet" href="css/style.css" />
     <title>Agendar horário - Barber Control</title>
 
     <style>
-        /* Ajuste  que só existe na página pública do cliente */
-        .nav-mes {
-            display: flex;
-            gap: 6px;
-        }
+      /* Ajuste  que só existe na página pública do cliente */
+      .nav-mes {
+        display: flex;
+        gap: 6px;
+      }
 
-        .nav-btn {
-            background: #262019;
-            color: #ffc107;
-            border: 1px solid #332d29;
-            border-radius: 6px;
-            width: 30px;
-            height: 30px;
-            cursor: pointer;
-            font-size: 14px;
-        }
+      .nav-btn {
+        background: #262019;
+        color: #ffc107;
+        border: 1px solid #332d29;
+        border-radius: 6px;
+        width: 30px;
+        height: 30px;
+        cursor: pointer;
+        font-size: 14px;
+      }
 
-        .nav-btn:disabled {
-            opacity: 0.35;
-            cursor: not-allowed;
-        }
+      .nav-btn:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+      }
 
+      .day-cell.past {
+        cursor: not-allowed;
+      }
 
-        .day-cell.past {
-            cursor: not-allowed;
-        }
+      .day-cell.past:hover {
+        filter: none;
+      }
 
-        .day-cell.past:hover {
-            filter: none;
-        }
+      .chips {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+        gap: 8px;
+      }
 
-        .chips {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
-            gap: 8px;
-        }
+      .chip {
+        background: #1c1714;
+        border: 1px solid #ffc107;
+        color: #ffc107;
+        border-radius: 8px;
+        padding: 9px 0;
+        font-size: 13.5px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+      }
 
-        .chip {
-            background: #1c1714;
-            border: 1px solid #ffc107;
-            color: #ffc107;
-            border-radius: 8px;
-            padding: 9px 0;
-            font-size: 13.5px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: background-color 0.15s ease;
-        }
+      .chip:hover {
+        background: #332d29;
+      }
 
-        .chip:hover {
-            background: #332d29;
-        }
+      .chip.selecionado {
+        background: #ffc107;
+        color: #1a1a1a;
+      }
 
-        .chip.selecionado {
-            background: #ffc107;
-            color: #1a1a1a;
-        }
+      .btn-agendar:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
 
-        .btn-agendar:disabled {
-            opacity: 0.45;
-            cursor: not-allowed;
-        }
+      .aviso-lgpd {
+        display: flex;
+        gap: 10px;
+        font-size: 12px;
+        color: #a8a8a8;
+        line-height: 1.5;
+        margin: 4px 0 14px;
+      }
 
-        .aviso-lgpd {
-            display: flex;
-            gap: 10px;
-            font-size: 12px;
-            color: #a8a8a8;
-            line-height: 1.5;
-            margin: 4px 0 14px;
-        }
+      .aviso-lgpd i {
+        color: #ffc107;
+        margin-top: 2px;
+      }
 
-        .aviso-lgpd i {
-            color: #ffc107;
-            margin-top: 2px;
-        }
+      .aviso-lgpd a {
+        color: #ffc107;
+      }
 
-        .aviso-lgpd a {
-            color: #ffc107;
-        }
+      .mensagem {
+        display: none;
+        border-radius: 8px;
+        padding: 12px 14px;
+        font-size: 14px;
+      }
 
-        .mensagem {
-            display: none;
-            border-radius: 8px;
-            padding: 12px 14px;
-            font-size: 14px;
-        }
+      .mensagem.visivel {
+        display: block;
+      }
 
-        .mensagem.visivel {
-            display: block;
-        }
+      .mensagem.ok {
+        background: #fff6d6;
+        border: 1px solid #ffc107;
+        color: #5c4500;
+      }
 
-        .mensagem.ok {
-            background: #fff6d6;
-            border: 1px solid #ffc107;
-            color: #5c4500;
-        }
-
-        .mensagem.erro {
-            background: #fdeceb;
-            border: 1px solid #dc463c;
-            color: #8a2019;
-        }
+      .mensagem.erro {
+        background: #fdeceb;
+        border: 1px solid #dc463c;
+        color: #8a2019;
+      }
     </style>
-</head>
-<body>
-<main class="main-content">
-    <div class="conteudo-agendamento">
+  </head>
+  <body>
+    <main class="main-content">
+      <div class="conteudo-agendamento">
         <div class="welcome-header">
-            <h1>Agende seu horário</h1>
-            <p>
-                Escolha o dia no calendário, o horário livre e preencha seus dados.
-                Não precisa de cadastro.
-            </p>
+          <h1>Agende seu horário</h1>
+          <p>
+            Escolha o dia no calendário, o horário livre e preencha seus dados.
+            Não precisa de cadastro.
+          </p>
         </div>
 
         <div class="mensagem" id="mensagem"></div>
 
         <div class="agendamento-grid">
-            <div class="calendario">
-                <div class="calendario-header">
-                    <h2 id="mes-titulo"></h2>
-                    <div class="nav-mes">
-                        <button
-                                type="button"
-                                class="nav-btn"
-                                id="btn-mes-anterior"
-                                aria-label="Mês anterior"
-                        >
-                            <i class="fa-solid fa-chevron-left"></i>
-                        </button>
-                        <button
-                                type="button"
-                                class="nav-btn"
-                                id="btn-mes-seguinte"
-                                aria-label="Próximo mês"
-                        >
-                            <i class="fa-solid fa-chevron-right"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="calendario-grid" id="calendario"></div>
+          <div class="calendario">
+            <div class="calendario-header">
+              <h2 id="mes-titulo"></h2>
+              <div class="nav-mes">
+                <button
+                  type="button"
+                  class="nav-btn"
+                  id="btn-mes-anterior"
+                  aria-label="Mês anterior"
+                >
+                  <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <button
+                  type="button"
+                  class="nav-btn"
+                  id="btn-mes-seguinte"
+                  aria-label="Próximo mês"
+                >
+                  <i class="fa-solid fa-chevron-right"></i>
+                </button>
+              </div>
             </div>
 
-            <div class="coluna-lateral">
-                <div class="agenda-do-dia">
-                    <h3 id="horarios-titulo">Horários livres</h3>
-                    <div id="horarios-lista">
-                        <p class="agenda-vazia">Escolha um dia no calendário.</p>
-                    </div>
+            <div class="calendario-grid" id="calendario"></div>
+          </div>
+
+          <div class="coluna-lateral">
+            <div class="agenda-do-dia">
+              <h3 id="horarios-titulo">Horários livres</h3>
+              <div id="horarios-lista">
+                <p class="agenda-vazia">Escolha um dia no calendário.</p>
+              </div>
+            </div>
+
+            <div class="novo-agendamento">
+              <h3>Seus dados</h3>
+              <p class="subtitulo" id="resumo-label">
+                Escolha um dia e um horário
+              </p>
+
+              <form id="form-agendamento" novalidate>
+                <div class="campo">
+                  <label for="nome">Nome</label>
+                  <input
+                    type="text"
+                    id="nome"
+                    maxlength="100"
+                    autocomplete="name"
+                  />
                 </div>
 
-                <div class="novo-agendamento">
-                    <h3>Seus dados</h3>
-                    <p class="subtitulo" id="resumo-label">Escolha um dia e um horário</p>
+                <div class="campo">
+                  <label for="telefone">Telefone (com DDD)</label>
+                  <input
+                    type="tel"
+                    id="telefone"
+                    placeholder="(61) 99999-9999"
+                    autocomplete="tel"
+                  />
+                </div>
 
-                    <form id="form-agendamento" novalidate>
-                        <div class="campo">
-                            <label for="nome">Nome</label>
-                            <input type="text" id="nome" maxlength="100" autocomplete="name" />
-                        </div>
+                <div class="campo-linha">
+                  <div class="campo">
+                    <label for="servico">Serviço</label>
+                    <select id="servico"></select>
+                  </div>
+                  <div class="campo">
+                    <label for="barbeiro">Barbeiro</label>
+                    <select id="barbeiro"></select>
+                  </div>
+                </div>
 
-                        <div class="campo">
-                            <label for="telefone">Telefone (com DDD)</label>
-                            <input
-                                    type="tel"
-                                    id="telefone"
-                                    placeholder="(61) 99999-9999"
-                                    autocomplete="tel"
-                            />
-                        </div>
-
-                        <div class="campo-linha">
-                            <div class="campo">
-                                <label for="servico">Serviço</label>
-                                <select id="servico"></select>
-                            </div>
-                            <div class="campo">
-                                <label for="barbeiro">Barbeiro</label>
-                                <select id="barbeiro"></select>
-                            </div>
-                        </div>
-
-                        <p class="aviso-lgpd">
-                            <i class="fa-solid fa-shield-halved"></i>
-                            <span>
+                <p class="aviso-lgpd">
+                  <i class="fa-solid fa-shield-halved"></i>
+                  <span>
                     Usamos seu nome e telefone apenas para confirmar este
                     agendamento. Saiba mais na
-                    <a href="politica-privacidade.html?origem=cliente" target="_blank">política de privacidade</a>.
+                    <a
+                      href="politica-privacidade.html?origem=cliente"
+                      target="_blank"
+                      >política de privacidade</a
+                    >.
                   </span>
-                        </p>
+                </p>
 
-                        <button type="submit" class="btn-agendar" id="btn-agendar" disabled>
-                            + Agendar
-                        </button>
-                    </form>
-                </div>
+                <button
+                  type="submit"
+                  class="btn-agendar"
+                  id="btn-agendar"
+                  disabled
+                >
+                  + Agendar
+                </button>
+              </form>
             </div>
+          </div>
         </div>
-    </div>
-</main>
+      </div>
+    </main>
 
-<script>
-    const API = "http://localhost:8080/api/publico";
-    const MESES = [
-        "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-        "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
-    ];
-    const DIAS = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
+    <script src="js/config.js"></script>
+    <script>
+      const API = `${window.API_BASE_URL}/api/publico`;
+      const MESES = [
+        "Janeiro",
+        "Fevereiro",
+        "Março",
+        "Abril",
+        "Maio",
+        "Junho",
+        "Julho",
+        "Agosto",
+        "Setembro",
+        "Outubro",
+        "Novembro",
+        "Dezembro",
+      ];
+      const DIAS = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
 
-    const el = (id) => document.getElementById(id);
-    const selServico = el("servico");
-    const selBarbeiro = el("barbeiro");
-    const inpNome = el("nome");
-    const inpTelefone = el("telefone");
-    const btn = el("btn-agendar");
-    const msg = el("mensagem");
+      const el = (id) => document.getElementById(id);
+      const selServico = el("servico");
+      const selBarbeiro = el("barbeiro");
+      const inpNome = el("nome");
+      const inpTelefone = el("telefone");
+      const btn = el("btn-agendar");
+      const msg = el("mensagem");
 
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
 
-    let anoAtual = hoje.getFullYear();
-    let mesAtual = hoje.getMonth();
-    let dataSelecionada = null; // "AAAA-MM-DD"
-    let horarioSelecionado = null; // "HH:MM"
+      let anoAtual = hoje.getFullYear();
+      let mesAtual = hoje.getMonth();
+      let dataSelecionada = null; // "AAAA-MM-DD"
+      let horarioSelecionado = null; // "HH:MM"
 
-    function iso(ano, mes, dia) {
+      function iso(ano, mes, dia) {
         return `${ano}-${String(mes + 1).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
-    }
+      }
 
-    function formatarDataBr(dataIso) {
+      function formatarDataBr(dataIso) {
         return dataIso.split("-").reverse().join("/");
-    }
+      }
 
-    function mostrarMensagem(texto, tipo) {
+      function mostrarMensagem(texto, tipo) {
         msg.textContent = texto;
         msg.className = "mensagem visivel " + tipo;
         msg.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
+      }
 
-    function limparMensagem() {
+      function limparMensagem() {
         msg.className = "mensagem";
-    }
+      }
 
-    function atualizarResumo() {
+      function atualizarResumo() {
         const label = el("resumo-label");
         if (!dataSelecionada) {
-            label.textContent = "Escolha um dia e um horário";
+          label.textContent = "Escolha um dia e um horário";
         } else if (!horarioSelecionado) {
-            label.textContent = `Dia ${formatarDataBr(dataSelecionada)} — escolha um horário`;
+          label.textContent = `Dia ${formatarDataBr(dataSelecionada)} — escolha um horário`;
         } else {
-            label.textContent = `Dia ${formatarDataBr(dataSelecionada)} às ${horarioSelecionado}`;
+          label.textContent = `Dia ${formatarDataBr(dataSelecionada)} às ${horarioSelecionado}`;
         }
 
         const ok =
-            dataSelecionada &&
-            horarioSelecionado &&
-            inpNome.value.trim().length > 1 &&
-            inpTelefone.value.replace(/\D/g, "").length >= 10;
+          dataSelecionada &&
+          horarioSelecionado &&
+          inpNome.value.trim().length > 1 &&
+          inpTelefone.value.replace(/\D/g, "").length >= 10;
         btn.disabled = !ok;
-    }
+      }
 
-    /*  Calendário  */
-    function renderCalendario() {
+      /*  Calendário  */
+      function renderCalendario() {
         const grid = el("calendario");
         grid.innerHTML = "";
 
         DIAS.forEach((nome) => {
-            const d = document.createElement("div");
-            d.className = "day-name";
-            d.textContent = nome;
-            grid.appendChild(d);
+          const d = document.createElement("div");
+          d.className = "day-name";
+          d.textContent = nome;
+          grid.appendChild(d);
         });
 
         const primeiroDiaSemana = new Date(anoAtual, mesAtual, 1).getDay();
         const totalDias = new Date(anoAtual, mesAtual + 1, 0).getDate();
 
         for (let i = 0; i < primeiroDiaSemana; i++) {
-            const vazio = document.createElement("div");
-            vazio.className = "day-cell empty";
-            grid.appendChild(vazio);
+          const vazio = document.createElement("div");
+          vazio.className = "day-cell empty";
+          grid.appendChild(vazio);
         }
 
         for (let dia = 1; dia <= totalDias; dia++) {
-            const celula = document.createElement("button");
-            celula.type = "button";
-            celula.className = "day-cell";
-            celula.textContent = dia;
+          const celula = document.createElement("button");
+          celula.type = "button";
+          celula.className = "day-cell";
+          celula.textContent = dia;
 
-            const dataIso = iso(anoAtual, mesAtual, dia);
-            if (new Date(anoAtual, mesAtual, dia) < hoje) {
-                celula.classList.add("past");
-                celula.disabled = true;
-            }
-            if (dataIso === dataSelecionada) {
-                celula.classList.add("selected");
-            }
-            celula.addEventListener("click", () => selecionarDia(dataIso));
-            grid.appendChild(celula);
+          const dataIso = iso(anoAtual, mesAtual, dia);
+          if (new Date(anoAtual, mesAtual, dia) < hoje) {
+            celula.classList.add("past");
+            celula.disabled = true;
+          }
+          if (dataIso === dataSelecionada) {
+            celula.classList.add("selected");
+          }
+          celula.addEventListener("click", () => selecionarDia(dataIso));
+          grid.appendChild(celula);
         }
 
         el("mes-titulo").textContent = `${MESES[mesAtual]} ${anoAtual}`;
         el("btn-mes-anterior").disabled =
-            anoAtual === hoje.getFullYear() && mesAtual === hoje.getMonth();
-    }
+          anoAtual === hoje.getFullYear() && mesAtual === hoje.getMonth();
+      }
 
-    function mudarMes(delta) {
+      function mudarMes(delta) {
         mesAtual += delta;
-        if (mesAtual < 0) { mesAtual = 11; anoAtual--; }
-        if (mesAtual > 11) { mesAtual = 0; anoAtual++; }
+        if (mesAtual < 0) {
+          mesAtual = 11;
+          anoAtual--;
+        }
+        if (mesAtual > 11) {
+          mesAtual = 0;
+          anoAtual++;
+        }
         renderCalendario();
-    }
+      }
 
-    function selecionarDia(dataIso) {
+      function selecionarDia(dataIso) {
         dataSelecionada = dataIso;
         horarioSelecionado = null;
         renderCalendario();
         carregarHorarios();
         atualizarResumo();
-    }
+      }
 
-    /*  Horários livres  */
-    async function carregarHorarios() {
+      /*  Horários livres  */
+      async function carregarHorarios() {
         const lista = el("horarios-lista");
         horarioSelecionado = null;
         atualizarResumo();
 
         if (!selBarbeiro.value || !selServico.value) {
-            lista.innerHTML =
-                '<p class="agenda-vazia">Nenhum serviço ou barbeiro disponível no momento.</p>';
-            return;
+          lista.innerHTML =
+            '<p class="agenda-vazia">Nenhum serviço ou barbeiro disponível no momento.</p>';
+          return;
         }
 
         if (!dataSelecionada) {
-            lista.innerHTML = '<p class="agenda-vazia">Escolha um dia no calendário.</p>';
-            return;
+          lista.innerHTML =
+            '<p class="agenda-vazia">Escolha um dia no calendário.</p>';
+          return;
         }
 
         el("horarios-titulo").textContent =
-            `Horários livres em ${formatarDataBr(dataSelecionada).slice(0, 5)}`;
+          `Horários livres em ${formatarDataBr(dataSelecionada).slice(0, 5)}`;
 
         try {
-            const res = await fetch(
-                `${API}/horarios?barbeiroId=${selBarbeiro.value}&servicoId=${selServico.value}&data=${dataSelecionada}`
-            );
-            const horarios = await res.json();
+          const res = await fetch(
+            `${API}/horarios?barbeiroId=${selBarbeiro.value}&servicoId=${selServico.value}&data=${dataSelecionada}`,
+          );
+          const horarios = await res.json();
 
-            lista.innerHTML = "";
-            if (!res.ok || horarios.length === 0) {
-                lista.innerHTML =
-                    '<p class="agenda-vazia">Nenhum horário livre nesse dia. Tente outra data.</p>';
-                return;
-            }
+          lista.innerHTML = "";
+          if (!res.ok || horarios.length === 0) {
+            lista.innerHTML =
+              '<p class="agenda-vazia">Nenhum horário livre nesse dia. Tente outra data.</p>';
+            return;
+          }
 
-            const chips = document.createElement("div");
-            chips.className = "chips";
-            horarios.forEach((h) => {
-                const chip = document.createElement("button");
-                chip.type = "button";
-                chip.className = "chip";
-                chip.textContent = h;
-                chip.addEventListener("click", () => {
-                    chips.querySelectorAll(".chip").forEach((c) => c.classList.remove("selecionado"));
-                    chip.classList.add("selecionado");
-                    horarioSelecionado = h;
-                    atualizarResumo();
-                });
-                chips.appendChild(chip);
+          const chips = document.createElement("div");
+          chips.className = "chips";
+          horarios.forEach((h) => {
+            const chip = document.createElement("button");
+            chip.type = "button";
+            chip.className = "chip";
+            chip.textContent = h;
+            chip.addEventListener("click", () => {
+              chips
+                .querySelectorAll(".chip")
+                .forEach((c) => c.classList.remove("selecionado"));
+              chip.classList.add("selecionado");
+              horarioSelecionado = h;
+              atualizarResumo();
             });
-            lista.appendChild(chips);
+            chips.appendChild(chip);
+          });
+          lista.appendChild(chips);
         } catch (e) {
-            lista.innerHTML = '<p class="agenda-vazia">Erro ao carregar horários.</p>';
+          lista.innerHTML =
+            '<p class="agenda-vazia">Erro ao carregar horários.</p>';
         }
-    }
+      }
 
-    /*  Opções de serviços e barbeiros */
-    function preencherSelect(select, itens, rotulo) {
+      /*  Opções de serviços e barbeiros */
+      function preencherSelect(select, itens, rotulo) {
         select.innerHTML = "";
         itens.forEach((item) => {
-            const opt = document.createElement("option");
-            opt.value = item.id;
-            opt.textContent = rotulo(item);
-            select.appendChild(opt);
+          const opt = document.createElement("option");
+          opt.value = item.id;
+          opt.textContent = rotulo(item);
+          select.appendChild(opt);
         });
-    }
+      }
 
-    async function carregarOpcoes() {
+      async function carregarOpcoes() {
         try {
-            const rb = await fetch(`${API}/barbeiros`);
-            const barbeiros = await rb.json();
-            preencherSelect(selBarbeiro, barbeiros, (b) => `${b.nome} — ${b.barbearia}`);
-            await carregarServicosDoBarbeiro();
-            carregarHorarios();
+          const rb = await fetch(`${API}/barbeiros`);
+          const barbeiros = await rb.json();
+          preencherSelect(
+            selBarbeiro,
+            barbeiros,
+            (b) => `${b.nome} — ${b.barbearia}`,
+          );
+          await carregarServicosDoBarbeiro();
+          carregarHorarios();
         } catch (e) {
-            mostrarMensagem(
-                "Não foi possível conectar ao sistema. Tente novamente em instantes.",
-                "erro"
-            );
+          mostrarMensagem(
+            "Não foi possível conectar ao sistema. Tente novamente em instantes.",
+            "erro",
+          );
         }
-    }
+      }
 
-    async function carregarServicosDoBarbeiro() {
+      async function carregarServicosDoBarbeiro() {
         if (!selBarbeiro.value) {
-            selServico.innerHTML = "";
-            return;
+          selServico.innerHTML = "";
+          return;
         }
-        const resposta = await fetch(`${API}/servicos?barbeiroId=${encodeURIComponent(selBarbeiro.value)}`);
+        const resposta = await fetch(
+          `${API}/servicos?barbeiroId=${encodeURIComponent(selBarbeiro.value)}`,
+        );
         if (!resposta.ok) {
-            throw new Error("Não foi possível carregar os serviços do barbeiro.");
+          throw new Error("Não foi possível carregar os serviços do barbeiro.");
         }
         const servicos = await resposta.json();
         preencherSelect(selServico, servicos, (s) => {
-            const preco = Number(s.valor).toFixed(2).replace(".", ",");
-            return `${s.nome} — R$ ${preco} (${s.duracaoMinutos} min)`;
+          const preco = Number(s.valor).toFixed(2).replace(".", ",");
+          return `${s.nome} — R$ ${preco} (${s.duracaoMinutos} min)`;
         });
-    }
+      }
 
-    /*  Agendar  */
-    async function agendar(evento) {
+      /*  Agendar  */
+      async function agendar(evento) {
         evento.preventDefault();
         limparMensagem();
         btn.disabled = true;
         btn.textContent = "Confirmando...";
 
         try {
-            const res = await fetch(`${API}/agendar`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    barbeiroId: Number(selBarbeiro.value),
-                    servicoId: Number(selServico.value),
-                    clienteNome: inpNome.value.trim(),
-                    clienteTelefone: inpTelefone.value,
-                    dataHora: `${dataSelecionada}T${horarioSelecionado}:00`,
-                }),
-            });
-            const dados = await res.json();
+          const res = await fetch(`${API}/agendar`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              barbeiroId: Number(selBarbeiro.value),
+              servicoId: Number(selServico.value),
+              clienteNome: inpNome.value.trim(),
+              clienteTelefone: inpTelefone.value,
+              dataHora: `${dataSelecionada}T${horarioSelecionado}:00`,
+            }),
+          });
+          const dados = await res.json();
 
-            if (res.ok) {
-                mostrarMensagem(
-                    `Agendamento confirmado para ${formatarDataBr(dataSelecionada)} às ${horarioSelecionado}. Até lá!`,
-                    "ok"
-                );
-                inpNome.value = "";
-                inpTelefone.value = "";
-            } else {
-                mostrarMensagem(dados.erro || "Não foi possível agendar.", "erro");
-            }
+          if (res.ok) {
+            mostrarMensagem(
+              `Agendamento confirmado para ${formatarDataBr(dataSelecionada)} às ${horarioSelecionado}. Até lá!`,
+              "ok",
+            );
+            inpNome.value = "";
+            inpTelefone.value = "";
+          } else {
+            mostrarMensagem(dados.erro || "Não foi possível agendar.", "erro");
+          }
         } catch (e) {
-            mostrarMensagem("Erro de conexão. Tente novamente.", "erro");
+          mostrarMensagem("Erro de conexão. Tente novamente.", "erro");
         } finally {
-            btn.textContent = "+ Agendar";
-            carregarHorarios(); // atualiza a lista: o horário escolhido some
+          btn.textContent = "+ Agendar";
+          carregarHorarios(); // atualiza a lista: o horário escolhido some
         }
-    }
+      }
 
-    /*  Eventos  */
-    el("btn-mes-anterior").addEventListener("click", () => mudarMes(-1));
-    el("btn-mes-seguinte").addEventListener("click", () => mudarMes(1));
-    selServico.addEventListener("change", carregarHorarios);
-    selBarbeiro.addEventListener("change", async () => {
+      /*  Eventos  */
+      el("btn-mes-anterior").addEventListener("click", () => mudarMes(-1));
+      el("btn-mes-seguinte").addEventListener("click", () => mudarMes(1));
+      selServico.addEventListener("change", carregarHorarios);
+      selBarbeiro.addEventListener("change", async () => {
         try {
-            await carregarServicosDoBarbeiro();
-            carregarHorarios();
+          await carregarServicosDoBarbeiro();
+          carregarHorarios();
         } catch (e) {
-            mostrarMensagem("Não foi possível carregar os serviços deste barbeiro.", "erro");
+          mostrarMensagem(
+            "Não foi possível carregar os serviços deste barbeiro.",
+            "erro",
+          );
         }
-    });
-    inpNome.addEventListener("input", atualizarResumo);
+      });
+      inpNome.addEventListener("input", atualizarResumo);
 
-    // máscara simples de telefone: (61) 99999-9999
-    inpTelefone.addEventListener("input", () => {
+      // máscara simples de telefone: (61) 99999-9999
+      inpTelefone.addEventListener("input", () => {
         let d = inpTelefone.value.replace(/\D/g, "").slice(0, 11);
         if (d.length > 6) {
-            const corte = d.length > 10 ? 7 : 6;
-            d = `(${d.slice(0, 2)}) ${d.slice(2, corte)}-${d.slice(corte)}`;
+          const corte = d.length > 10 ? 7 : 6;
+          d = `(${d.slice(0, 2)}) ${d.slice(2, corte)}-${d.slice(corte)}`;
         } else if (d.length > 2) {
-            d = `(${d.slice(0, 2)}) ${d.slice(2)}`;
+          d = `(${d.slice(0, 2)}) ${d.slice(2)}`;
         }
         inpTelefone.value = d;
         atualizarResumo();
-    });
+      });
 
-    el("form-agendamento").addEventListener("submit", agendar);
+      el("form-agendamento").addEventListener("submit", agendar);
 
-    /*  Início  */
-    dataSelecionada = iso(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
-    renderCalendario();
-    atualizarResumo();
-    carregarOpcoes();
-</script>
-</body>
+      /*  Início  */
+      dataSelecionada = iso(
+        hoje.getFullYear(),
+        hoje.getMonth(),
+        hoje.getDate(),
+      );
+      renderCalendario();
+      atualizarResumo();
+      carregarOpcoes();
+    </script>
+  </body>
 </html>
