@@ -407,6 +407,60 @@ body {
   font-size: 14px;
 }
 
+.servicos-multiplos {
+  min-width: 0;
+  border: 0;
+  padding: 0;
+}
+
+.servicos-multiplos legend {
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.servicos-opcoes {
+  display: grid;
+  gap: 8px;
+  max-height: 160px;
+  overflow-y: auto;
+  padding: 9px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.servico-opcao {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+.servico-opcao input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  margin: 0;
+  padding: 0;
+  accent-color: #ffc107;
+}
+
+.servico-opcao span {
+  overflow-wrap: anywhere;
+}
+
+.modal-content .servicos-opcoes {
+  max-height: 130px;
+  background: #fff;
+}
+
+.modal-content .servico-opcao {
+  color: #333;
+}
+
 .modal-actions {
   display: flex;
   justify-content: flex-end;
@@ -635,6 +689,21 @@ body {
   font-size: 12.5px;
   color: #d8d8d8;
   margin-bottom: 6px;
+}
+
+.campo.servicos-multiplos legend {
+  color: #d8d8d8;
+}
+
+.campo.servicos-multiplos .servicos-opcoes {
+  border-color: #ffc107;
+  background: #1c1714;
+}
+
+.campo.servicos-multiplos .servico-opcao {
+  display: flex;
+  margin: 0;
+  color: #f2f2f2;
 }
 
 .campo input,

@@ -109,16 +109,15 @@
                   <input type="text" id="cliente-nome" required />
                 </div>
 
-                <div class="campo-linha">
-                  <div class="campo">
-                    <label for="servico">Serviço</label>
-                    <select id="servico"></select>
-                  </div>
-                  <div class="campo">
-                    <label for="horario">Horário</label>
-                    <select id="horario"></select>
-                  </div>
+                <div class="campo">
+                  <label for="horario">Horário</label>
+                  <select id="horario"></select>
                 </div>
+
+                <fieldset class="campo servicos-multiplos">
+                  <legend>Serviços</legend>
+                  <div class="servicos-opcoes" id="servicos-opcoes"></div>
+                </fieldset>
 
                 <button type="submit" class="btn-agendar">+ Agendar</button>
               </form>
@@ -147,10 +146,13 @@
                     <label for="edicao-cliente-nome">Cliente</label>
                     <input type="text" id="edicao-cliente-nome" required />
                   </div>
-                  <div class="campo">
-                    <label for="edicao-servico">Serviço</label>
-                    <select id="edicao-servico" required></select>
-                  </div>
+                  <fieldset class="campo servicos-multiplos">
+                    <legend>Serviços</legend>
+                    <div
+                      class="servicos-opcoes"
+                      id="edicao-servicos-opcoes"
+                    ></div>
+                  </fieldset>
                   <div class="campo">
                     <label for="edicao-data-hora">Data e horário</label>
                     <input

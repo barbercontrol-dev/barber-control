@@ -1,4 +1,5 @@
 let barbeiroAtual = null;
+let barbeirosDisponiveis = [];
 let servicosDisponiveis = [];
 let todosAgendamentos = [];
 let entradasDoMes = [];
@@ -30,7 +31,7 @@ function decodeJwtPayload(token) {
   try {
     const payloadBase64 = token.split(".")[1];
     const payloadJson = atob(
-        payloadBase64.replace(/-/g, "+").replace(/_/g, "/"),
+      payloadBase64.replace(/-/g, "+").replace(/_/g, "/"),
     );
     return JSON.parse(payloadJson);
   } catch (e) {
@@ -52,7 +53,8 @@ async function identificarBarbeiroLogado() {
   barbeiroAtual = usuarios.find((u) => u.email === payload.sub) || null;
 
   if (barbeiroAtual) {
-    profileNameEl.textContent = barbeiroAtual.nomeBarbearia || barbeiroAtual.nome;
+    profileNameEl.textContent =
+      barbeiroAtual.nomeBarbearia || barbeiroAtual.nome;
     saudacaoEl.textContent = `Olá, ${barbeiroAtual.nome}!`;
   }
 }
@@ -62,38 +64,39 @@ function ehHoje(dataHoraStr) {
   const data = new Date(dataHoraStr);
   const agora = new Date();
   return (
-      data.getFullYear() === agora.getFullYear() &&
-      data.getMonth() === agora.getMonth() &&
-      data.getDate() === agora.getDate()
+    data.getFullYear() === agora.getFullYear() &&
+    data.getMonth() === agora.getMonth() &&
+    data.getDate() === agora.getDate()
   );
 }
 
 // ===== Lista "Agendamentos de hoje" =====
 function renderizarListaHoje() {
   const agendamentosDeHoje = todosAgendamentos
-      .filter((a) => ehHoje(a.dataHora))
-      .sort((a, b) => new Date(a.dataHora) - new Date(b.dataHora));
+    .filter((a) => ehHoje(a.dataHora))
+    .sort((a, b) => new Date(a.dataHora) - new Date(b.dataHora));
 
-  totalAgendamentosEl.textContent = agendamentosDeHoje.length.toLocaleString("pt-BR");
+  totalAgendamentosEl.textContent =
+    agendamentosDeHoje.length.toLocaleString("pt-BR");
   if (agendamentosDeHoje.length === 0) {
     listaHojeEl.innerHTML = `<p style="text-align:center;color:#999;font-size:13.5px;">Nenhum agendamento para hoje.</p>`;
     return;
   }
 
   listaHojeEl.innerHTML = agendamentosDeHoje
-      .map((a) => {
-        const hora = new Date(a.dataHora).toLocaleTimeString("pt-BR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-        return `
+    .map((a) => {
+      const hora = new Date(a.dataHora).toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      return `
       <div class="appointment-item">
         <span>${escaparHtml(a.clienteNome)}</span>
         <span class="appointment-time">${hora}h</span>
       </div>
     `;
-      })
-      .join("");
+    })
+    .join("");
 }
 
 function dataLocal(data) {
@@ -118,7 +121,11 @@ function atendimentosConcluidosDoMes() {
   const periodo = obterPeriodoAtual();
   return todosAgendamentos.filter((agendamento) => {
     const data = String(agendamento.dataHora || "").slice(0, 10);
-    return agendamento.status === "CONCLUIDO" && data >= periodo.inicio && data <= periodo.fim;
+    return (
+      agendamento.status === "CONCLUIDO" &&
+      data >= periodo.inicio &&
+      data <= periodo.fim
+    );
   });
 }
 
@@ -129,21 +136,38 @@ function entradasManuaisDoMes() {
 function entradasDoPainel() {
   return [
     ...entradasManuaisDoMes(),
-    ...atendimentosConcluidosDoMes().map((agendamento) => ({
-      data: String(agendamento.dataHora).slice(0, 10),
-      valor: agendamento.servico?.valor,
-      servicos: [{ nome: agendamento.servico?.nome }],
-    })),
+    ...atendimentosConcluidosDoMes().map((agendamento) => {
+      const servicos = agendamento.servicos?.length
+        ? agendamento.servicos
+        : agendamento.servico
+          ? [agendamento.servico]
+          : [];
+      return {
+        data: String(agendamento.dataHora).slice(0, 10),
+        valor: servicos.reduce(
+          (total, servico) => total + Number(servico.valor || 0),
+          0,
+        ),
+        servicos,
+      };
+    }),
   ];
 }
 
 function atualizarIndicadores() {
   if (!resumoFinanceiroMes) return;
-  document.getElementById("faturamento-mes").textContent = moedaBRL.format(resumoFinanceiroMes.faturamento);
-  document.getElementById("gastos-mes").textContent = moedaBRL.format(resumoFinanceiroMes.gastos);
-  document.getElementById("lucro-mes").textContent = moedaBRL.format(resumoFinanceiroMes.lucro);
-  document.getElementById("atendimentos-mes").textContent =
-    Number(resumoFinanceiroMes.atendimentos).toLocaleString("pt-BR");
+  document.getElementById("faturamento-mes").textContent = moedaBRL.format(
+    resumoFinanceiroMes.faturamento,
+  );
+  document.getElementById("gastos-mes").textContent = moedaBRL.format(
+    resumoFinanceiroMes.gastos,
+  );
+  document.getElementById("lucro-mes").textContent = moedaBRL.format(
+    resumoFinanceiroMes.lucro,
+  );
+  document.getElementById("atendimentos-mes").textContent = Number(
+    resumoFinanceiroMes.atendimentos,
+  ).toLocaleString("pt-BR");
 }
 
 function criarConjuntoDiario(movimentos, dias) {
@@ -151,7 +175,10 @@ function criarConjuntoDiario(movimentos, dias) {
   movimentos.forEach((movimento) => {
     const data = String(movimento.data).slice(0, 10);
     if (valoresPorData.has(data)) {
-      valoresPorData.set(data, valoresPorData.get(data) + Number(movimento.valor || 0));
+      valoresPorData.set(
+        data,
+        valoresPorData.get(data) + Number(movimento.valor || 0),
+      );
     }
   });
   return dias.map((dia) => valoresPorData.get(dia.chave) || 0);
@@ -196,8 +223,16 @@ function renderizarGraficoFluxoFinanceiro() {
       maintainAspectRatio: false,
       interaction: { mode: "index", intersect: false },
       plugins: {
-        legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 8, padding: 16 } },
-        tooltip: { callbacks: { label: (contexto) => `${contexto.dataset.label}: ${moedaBRL.format(contexto.raw)}` } },
+        legend: {
+          position: "bottom",
+          labels: { usePointStyle: true, boxWidth: 8, padding: 16 },
+        },
+        tooltip: {
+          callbacks: {
+            label: (contexto) =>
+              `${contexto.dataset.label}: ${moedaBRL.format(contexto.raw)}`,
+          },
+        },
       },
       scales: {
         y: {
@@ -205,7 +240,10 @@ function renderizarGraficoFluxoFinanceiro() {
           ticks: { color: "#888", callback: (valor) => moedaBRL.format(valor) },
           grid: { color: "#f0f0f0" },
         },
-        x: { ticks: { color: "#666", maxTicksLimit: 12 }, grid: { display: false } },
+        x: {
+          ticks: { color: "#666", maxTicksLimit: 12 },
+          grid: { display: false },
+        },
       },
     },
   });
@@ -213,40 +251,62 @@ function renderizarGraficoFluxoFinanceiro() {
 
 function renderizarGraficoServicos() {
   const contagem = new Map();
-  const servicosRealizados = entradasDoPainel().flatMap((entrada) => entrada.servicos || []);
+  const servicosRealizados = entradasDoPainel().flatMap(
+    (entrada) => entrada.servicos || [],
+  );
   servicosRealizados.forEach((servico) => {
     const nomeServico = servico.nome || "Serviço não informado";
     contagem.set(nomeServico, (contagem.get(nomeServico) || 0) + 1);
   });
 
-  const servicos = Array.from(contagem.entries()).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  const servicos = Array.from(contagem.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6);
   if (servicosChart) servicosChart.destroy();
-  servicosChart = new Chart(document.getElementById("servicosRealizadosChart"), {
-    type: "bar",
-    data: {
-      labels: servicos.length ? servicos.map(([nome]) => nome) : ["Sem atendimentos"],
-      datasets: [{
-        label: "Atendimentos",
-        data: servicos.length ? servicos.map(([, quantidade]) => quantidade) : [0],
-        backgroundColor: "#ffc107",
-        borderRadius: 6,
-        maxBarThickness: 28,
-      }],
-    },
-    options: {
-      indexAxis: "y",
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: (contexto) => `${contexto.raw} atendimento${contexto.raw === 1 ? "" : "s"}` } },
+  servicosChart = new Chart(
+    document.getElementById("servicosRealizadosChart"),
+    {
+      type: "bar",
+      data: {
+        labels: servicos.length
+          ? servicos.map(([nome]) => nome)
+          : ["Sem atendimentos"],
+        datasets: [
+          {
+            label: "Atendimentos",
+            data: servicos.length
+              ? servicos.map(([, quantidade]) => quantidade)
+              : [0],
+            backgroundColor: "#ffc107",
+            borderRadius: 6,
+            maxBarThickness: 28,
+          },
+        ],
       },
-      scales: {
-        x: { beginAtZero: true, ticks: { stepSize: 1, color: "#888" }, grid: { color: "#f0f0f0" } },
-        y: { ticks: { color: "#666" }, grid: { display: false } },
+      options: {
+        indexAxis: "y",
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (contexto) =>
+                `${contexto.raw} atendimento${contexto.raw === 1 ? "" : "s"}`,
+            },
+          },
+        },
+        scales: {
+          x: {
+            beginAtZero: true,
+            ticks: { stepSize: 1, color: "#888" },
+            grid: { color: "#f0f0f0" },
+          },
+          y: { ticks: { color: "#666" }, grid: { display: false } },
+        },
       },
     },
-  });
+  );
 }
 
 async function carregarFinanceiroDoMes() {
@@ -262,11 +322,15 @@ async function carregarFinanceiroDoMes() {
   const [respEntradas, respGastos, respResumo] = await Promise.all([
     consulta("ENTRADA"),
     consulta("SAIDA"),
-    apiFetch(`/api/financeiro/resumo?inicio=${periodo.inicio}&fim=${periodo.fim}`),
+    apiFetch(
+      `/api/financeiro/resumo?inicio=${periodo.inicio}&fim=${periodo.fim}`,
+    ),
   ]);
   if (!respEntradas || !respGastos || !respResumo) return;
   if (!respEntradas.ok || !respGastos.ok || !respResumo.ok) {
-    throw new Error("Não foi possível carregar os dados financeiros deste mês.");
+    throw new Error(
+      "Não foi possível carregar os dados financeiros deste mês.",
+    );
   }
   [entradasDoMes, gastosDoMes, resumoFinanceiroMes] = await Promise.all([
     respEntradas.json(),
@@ -277,10 +341,28 @@ async function carregarFinanceiroDoMes() {
 
 // ===== Modal: novo agendamento rápido =====
 function popularSelectServicos() {
-  const select = document.getElementById("client-service");
-  select.innerHTML = servicosDisponiveis
-      .map((s) => `<option value="${s.id}">${escaparHtml(s.nome)}</option>`)
-      .join("");
+  const container = document.getElementById("client-services");
+  container.innerHTML = servicosDisponiveis
+    .map(
+      (servico) => `
+    <label class="servico-opcao">
+      <input type="checkbox" name="client-service" value="${servico.id}" />
+      <span>${escaparHtml(servico.nome)}</span>
+    </label>
+  `,
+    )
+    .join("");
+}
+
+function popularSelectBarbeiros() {
+  const select = document.getElementById("client-barber");
+  select.innerHTML = [
+    '<option value="" disabled selected>Selecione o barbeiro</option>',
+    ...barbeirosDisponiveis.map(
+      (barbeiro) =>
+        `<option value="${barbeiro.id}">${escaparHtml(barbeiro.nome)}</option>`,
+    ),
+  ].join("");
 }
 
 document.getElementById("open-modal-btn").addEventListener("click", () => {
@@ -292,97 +374,116 @@ document.getElementById("close-modal-btn").addEventListener("click", () => {
 });
 
 document
-    .getElementById("save-appointment-btn")
-    .addEventListener("click", async () => {
-      const nomeInput = document.getElementById("client-name");
-      const horaInput = document.getElementById("client-time");
-      const servicoSelect = document.getElementById("client-service");
+  .getElementById("save-appointment-btn")
+  .addEventListener("click", async () => {
+    const nomeInput = document.getElementById("client-name");
+    const horaInput = document.getElementById("client-time");
+    const barbeiroSelect = document.getElementById("client-barber");
+    const servicoIds = Array.from(
+      document.querySelectorAll(
+        '#client-services input[name="client-service"]:checked',
+      ),
+    ).map((checkbox) => Number(checkbox.value));
 
-      if (!nomeInput.value.trim() || !horaInput.value || !servicoSelect.value) {
-        alert("Por favor, preencha nome, horário e serviço.");
-        return;
-      }
+    if (
+      !nomeInput.value.trim() ||
+      !horaInput.value ||
+      !barbeiroSelect.value ||
+      !servicoIds.length
+    ) {
+      alert("Por favor, preencha nome, barbeiro, horário e serviço.");
+      return;
+    }
 
-      if (!barbeiroAtual) {
-        alert(
-            "Não foi possível identificar o barbeiro logado. Faça login novamente.",
-        );
-        return;
-      }
+    if (!barbeiroAtual) {
+      alert(
+        "Não foi possível identificar o barbeiro logado. Faça login novamente.",
+      );
+      return;
+    }
 
-      const hoje = new Date();
-      const dataHoje = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}-${String(hoje.getDate()).padStart(2, "0")}`;
-      const dataHora = `${dataHoje}T${horaInput.value}:00`;
+    const hoje = new Date();
+    const dataHoje = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}-${String(hoje.getDate()).padStart(2, "0")}`;
+    const dataHora = `${dataHoje}T${horaInput.value}:00`;
 
-      if (
-          new Date(dataHora) <
-          new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate())
-      ) {
-        alert("Não é possível agendar em um dia que já passou.");
-        return;
-      }
+    if (
+      new Date(dataHora) <
+      new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate())
+    ) {
+      alert("Não é possível agendar em um dia que já passou.");
+      return;
+    }
 
-      const resp = await apiFetch("/api/agendamentos", {
-        method: "POST",
-        body: JSON.stringify({
-          barbeiro: { id: barbeiroAtual.id },
-          servico: { id: Number(servicoSelect.value) },
-          clienteNome: nomeInput.value.trim(),
-          dataHora,
-        }),
-      });
-
-      if (!resp) return;
-
-      if (resp.status === 409 || resp.status === 400) {
-        const erro = await resp.json();
-        alert(erro.erro || "Não foi possível criar o agendamento.");
-        return;
-      }
-
-      if (!resp.ok) {
-        alert("Erro ao criar agendamento. Tente novamente.");
-        return;
-      }
-
-      nomeInput.value = "";
-      horaInput.value = "";
-      modal.style.display = "none";
-
-      const respAgendamentos = await apiFetch("/api/agendamentos");
-      if (respAgendamentos) {
-        todosAgendamentos = await respAgendamentos.json();
-        renderizarListaHoje();
-        try {
-          await carregarFinanceiroDoMes();
-          atualizarIndicadores();
-          renderizarGraficoFluxoFinanceiro();
-          renderizarGraficoServicos();
-        } catch (error) {
-          dashboardErroEl.hidden = false;
-          dashboardErroEl.textContent = error.message;
-        }
-      }
+    const resp = await apiFetch("/api/agendamentos", {
+      method: "POST",
+      body: JSON.stringify({
+        barbeiro: { id: Number(barbeiroSelect.value) },
+        servico: { id: servicoIds[0] },
+        servicos: servicoIds.map((id) => ({ id })),
+        clienteNome: nomeInput.value.trim(),
+        dataHora,
+      }),
     });
+
+    if (!resp) return;
+
+    if (resp.status === 409 || resp.status === 400) {
+      const erro = await resp.json();
+      alert(erro.erro || "Não foi possível criar o agendamento.");
+      return;
+    }
+
+    if (!resp.ok) {
+      alert("Erro ao criar agendamento. Tente novamente.");
+      return;
+    }
+
+    nomeInput.value = "";
+    horaInput.value = "";
+    document
+      .querySelectorAll('#client-services input[name="client-service"]')
+      .forEach((checkbox) => {
+        checkbox.checked = false;
+      });
+    modal.style.display = "none";
+
+    const respAgendamentos = await apiFetch("/api/agendamentos");
+    if (respAgendamentos) {
+      todosAgendamentos = await respAgendamentos.json();
+      renderizarListaHoje();
+      try {
+        await carregarFinanceiroDoMes();
+        atualizarIndicadores();
+        renderizarGraficoFluxoFinanceiro();
+        renderizarGraficoServicos();
+      } catch (error) {
+        dashboardErroEl.hidden = false;
+        dashboardErroEl.textContent = error.message;
+      }
+    }
+  });
 
 // ===== Inicialização =====
 async function carregarDados() {
   await identificarBarbeiroLogado();
 
-  const [respServicos, respAgendamentos] = await Promise.all([
+  const [respServicos, respAgendamentos, respBarbeiros] = await Promise.all([
     apiFetch("/api/servicos"),
     apiFetch("/api/agendamentos"),
+    apiFetch("/api/barbeiros"),
   ]);
 
-  if (!respServicos || !respAgendamentos) return;
-  if (!respServicos.ok || !respAgendamentos.ok) {
+  if (!respServicos || !respAgendamentos || !respBarbeiros) return;
+  if (!respServicos.ok || !respAgendamentos.ok || !respBarbeiros.ok) {
     throw new Error("Não foi possível carregar os dados do painel.");
   }
 
   servicosDisponiveis = await respServicos.json();
   todosAgendamentos = await respAgendamentos.json();
+  barbeirosDisponiveis = await respBarbeiros.json();
 
   popularSelectServicos();
+  popularSelectBarbeiros();
   renderizarListaHoje();
   await carregarFinanceiroDoMes();
   atualizarIndicadores();
@@ -392,5 +493,6 @@ async function carregarDados() {
 
 carregarDados().catch((error) => {
   dashboardErroEl.hidden = false;
-  dashboardErroEl.textContent = error.message || "Não foi possível carregar os dados do painel.";
+  dashboardErroEl.textContent =
+    error.message || "Não foi possível carregar os dados do painel.";
 });

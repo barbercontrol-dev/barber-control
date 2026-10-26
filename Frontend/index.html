@@ -164,7 +164,13 @@
             placeholder="Nome do Cliente"
             required
           />
-          <select id="client-service" required></select>
+          <select id="client-barber" required>
+            <option value="" disabled selected>Selecione o barbeiro</option>
+          </select>
+          <fieldset class="servicos-multiplos">
+            <legend>Serviços</legend>
+            <div class="servicos-opcoes" id="client-services"></div>
+          </fieldset>
           <input type="time" id="client-time" required />
           <div class="modal-actions">
             <button class="btn-cancel" id="close-modal-btn">Cancelar</button>

@@ -125,6 +125,7 @@ class FinanceiroServiceTests {
     @Test
     void criaUmaEntradaVinculadaAoAgendamentoConcluido() {
         Servico corte = new Servico(12L, "Corte", new BigDecimal("45.00"), 30);
+                Servico barba = new Servico(13L, "Barba", new BigDecimal("25.00"), 20);
         Usuario responsavel = new Usuario();
         responsavel.setId(21L);
         responsavel.setNome("Barbearia Central");
@@ -140,6 +141,7 @@ class FinanceiroServiceTests {
                 LocalDate.of(2026, 10, 19).atTime(14, 30),
                 "AGENDADO"
         );
+        agendamento.setServicos(List.of(corte, barba));
         when(movimentoRepository.findByAgendamentoId(37L)).thenReturn(java.util.Optional.empty());
         when(movimentoRepository.save(any(MovimentoFinanceiro.class)))
                 .thenAnswer(invocacao -> invocacao.getArgument(0));
@@ -151,10 +153,11 @@ class FinanceiroServiceTests {
         MovimentoFinanceiro movimento = movimentoCaptor.getValue();
         assertEquals("ENTRADA", movimento.getTipo());
         assertEquals("PIX", movimento.getFormaPagamento());
-        assertEquals(new BigDecimal("45.00"), movimento.getValor());
+        assertEquals(new BigDecimal("70.00"), movimento.getValor());
         assertEquals(responsavel, movimento.getUsuario());
         assertEquals(agendamento, movimento.getAgendamento());
         assertEquals(12L, movimento.getServicos().get(0).getServicoId());
+        assertEquals(13L, movimento.getServicos().get(1).getServicoId());
     }
 
     @Test

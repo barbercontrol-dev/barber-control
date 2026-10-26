@@ -185,8 +185,15 @@ public class PublicoController {
     }
 
     private int duracaoDe(Agendamento a) {
-        Integer d = (a.getServico() != null) ? a.getServico().getDuracaoMinutos() : null;
-        return d == null ? 0 : d;
+        if (a.getServicos() != null && !a.getServicos().isEmpty()) {
+            return a.getServicos().stream()
+                    .map(Servico::getDuracaoMinutos)
+                    .filter(duracao -> duracao != null)
+                    .mapToInt(Integer::intValue)
+                    .sum();
+        }
+        Integer duracao = a.getServico() != null ? a.getServico().getDuracaoMinutos() : null;
+        return duracao == null ? 0 : duracao;
     }
 
     private ResponseEntity<Map<String, String>> erro(HttpStatus status, String mensagem) {

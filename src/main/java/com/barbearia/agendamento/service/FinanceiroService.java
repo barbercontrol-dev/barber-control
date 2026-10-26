@@ -59,13 +59,24 @@ public class FinanceiroService {
                         fim.plusDays(1).atStartOfDay()
                 )
                 .stream()
-                .map(agendamento -> new AtendimentoPendenteFinanceiroResponse(
+                .map(agendamento -> {
+                    List<Servico> servicos = servicosDoAgendamento(agendamento);
+                    String nomesServicos = String.join(", ", servicos.stream()
+                        .map(Servico::getNome)
+                        .filter(nome -> nome != null && !nome.isBlank())
+                        .toList());
+                    BigDecimal valorTotal = servicos.stream()
+                        .map(Servico::getValor)
+                        .filter(valor -> valor != null)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    return new AtendimentoPendenteFinanceiroResponse(
                         agendamento.getId(),
                         agendamento.getDataHora().toLocalDate(),
                         agendamento.getClienteNome(),
-                        agendamento.getServico().getNome(),
-                        agendamento.getServico().getValor()
-                ))
+                        nomesServicos,
+                        valorTotal
+                    );
+                })
                 .toList();
     }
 
@@ -76,9 +87,9 @@ public class FinanceiroService {
             return;
         }
 
-        Servico servico = agendamento.getServico();
-        if (servico == null || servico.getId() == null || servico.getNome() == null || servico.getValor() == null) {
-            throw new IllegalArgumentException("O serviço do agendamento não possui dados financeiros válidos.");
+        List<Servico> servicos = servicosDoAgendamento(agendamento);
+        if (servicos.isEmpty()) {
+            throw new IllegalArgumentException("O agendamento não possui serviços válidos.");
         }
 
         MovimentoFinanceiro movimento = new MovimentoFinanceiro();
@@ -86,16 +97,23 @@ public class FinanceiroService {
         movimento.setData(agendamento.getDataHora().toLocalDate());
         movimento.setNomeCliente(agendamento.getClienteNome());
         movimento.setFormaPagamento(formaPagamento);
-        movimento.setValor(servico.getValor());
         Usuario barbeiro = agendamento.getBarbeiro();
         movimento.setUsuario(barbeiro.getBarbearia() != null ? barbeiro.getBarbearia() : barbeiro);
         movimento.setAgendamento(agendamento);
 
-        ServicoMovimentoFinanceiro item = new ServicoMovimentoFinanceiro();
-        item.setServicoId(servico.getId());
-        item.setNome(servico.getNome());
-        item.setValor(servico.getValor());
-        movimento.adicionarServico(item);
+        BigDecimal valorTotal = BigDecimal.ZERO;
+        for (Servico servico : servicos) {
+            if (servico.getId() == null || servico.getNome() == null || servico.getValor() == null) {
+                throw new IllegalArgumentException("Um serviço do agendamento não possui dados financeiros válidos.");
+            }
+            ServicoMovimentoFinanceiro item = new ServicoMovimentoFinanceiro();
+            item.setServicoId(servico.getId());
+            item.setNome(servico.getNome());
+            item.setValor(servico.getValor());
+            movimento.adicionarServico(item);
+            valorTotal = valorTotal.add(servico.getValor());
+        }
+        movimento.setValor(valorTotal);
         movimentoRepository.save(movimento);
     }
 
@@ -202,10 +220,13 @@ public class FinanceiroService {
             if (entrada != null) {
                 faturamento = faturamento.add(entrada.getValor());
             } else {
-                if (agendamento.getServico() == null || agendamento.getServico().getValor() == null) {
+                List<Servico> servicos = servicosDoAgendamento(agendamento);
+                if (servicos.isEmpty() || servicos.stream().anyMatch(servico -> servico.getValor() == null)) {
                     throw new IllegalStateException("Um atendimento concluído não possui valor de serviço.");
                 }
-                faturamento = faturamento.add(agendamento.getServico().getValor());
+                faturamento = faturamento.add(servicos.stream()
+                        .map(Servico::getValor)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add));
             }
         }
 
@@ -256,6 +277,13 @@ public class FinanceiroService {
             total = total.add(servico.getValor());
         }
         return total;
+    }
+
+    private List<Servico> servicosDoAgendamento(Agendamento agendamento) {
+        if (agendamento.getServicos() != null && !agendamento.getServicos().isEmpty()) {
+            return agendamento.getServicos();
+        }
+        return agendamento.getServico() == null ? List.of() : List.of(agendamento.getServico());
     }
 
     private String textoObrigatorio(String valor, String mensagem) {
