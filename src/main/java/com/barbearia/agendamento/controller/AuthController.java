@@ -44,11 +44,14 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody Usuario usuario) {
         var usuarioOpt = usuarioService.buscarPorEmail(usuario.getEmail());
 
-        if (usuarioOpt.isPresent()
-                && "ADMIN".equals(usuarioOpt.get().getRole())
-                && usuarioService.validarSenha(usuario.getSenha(), usuarioOpt.get().getSenha())) {
-            String token = jwtUtil.generateToken(usuarioOpt.get().getEmail());
-            return ResponseEntity.ok(Map.of("token", token));
+        if (usuarioOpt.isPresent()) {
+            Usuario encontrado = usuarioOpt.get();
+            boolean perfilValido = "ADMIN".equals(encontrado.getRole()) || "BARBEIRO".equals(encontrado.getRole());
+            if (perfilValido
+                    && encontrado.getSenha() != null
+                    && usuarioService.validarSenha(usuario.getSenha(), encontrado.getSenha())) {
+                return ResponseEntity.ok(Map.of("token", jwtUtil.generateToken(encontrado.getEmail())));
+            }
         }
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("erro", "Credenciais inválidas"));

@@ -3,8 +3,10 @@ package com.barbearia.agendamento.controller;
 import com.barbearia.agendamento.model.Agendamento;
 import com.barbearia.agendamento.model.Servico;
 import com.barbearia.agendamento.model.Usuario;
+import com.barbearia.agendamento.dto.BarbeariaResponse;
 import com.barbearia.agendamento.dto.BarbeiroResponse;
 import com.barbearia.agendamento.repository.AgendamentoRepository;
+import com.barbearia.agendamento.repository.BloqueioRepository;
 import com.barbearia.agendamento.repository.ServicoRepository;
 import com.barbearia.agendamento.repository.UsuarioRepository;
 import com.barbearia.agendamento.service.AgendamentoService;
@@ -23,21 +25,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-/**
- * Rotas públicas, usadas pelo cliente final para agendar.
- * As rotas aqui devolvem dados de outros clientes
- * nem os dados pessoais do barbeiro.
- */
 @RestController
 @RequestMapping("/api/publico")
 public class PublicoController {
 
-    // Funcionamento da barbearia
     private static final LocalTime ABERTURA = LocalTime.of(8, 0);
     private static final LocalTime FECHAMENTO = LocalTime.of(20, 0);
     private static final int INTERVALO_MINUTOS = 30;
-
-    // Nome só com letras, espaço, ponto, apóstrofo e hífen. Bloqueia símbolos como < e >
     private static final Pattern NOME_VALIDO = Pattern.compile("^[\\p{L} .'-]{2,100}$");
 
     @Autowired
@@ -51,6 +45,9 @@ public class PublicoController {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private BloqueioRepository bloqueioRepository;
 
     public record ServicoPublico(Long id, String nome, BigDecimal valor, Integer duracaoMinutos) {}
 
@@ -67,6 +64,18 @@ public class PublicoController {
                 .toList();
     }
 
+    @GetMapping("/barbearia")
+    public ResponseEntity<?> barbearia(@RequestParam Long barbeiroId) {
+        Usuario barbeiro = usuarioRepository.findByIdComBarbearia(barbeiroId)
+                .filter(u -> "BARBEIRO".equals(u.getRole()) && u.getBarbearia() != null)
+                .orElse(null);
+        if (barbeiro == null) {
+            return erro(HttpStatus.BAD_REQUEST, "Barbeiro inválido.");
+        }
+        Usuario b = barbeiro.getBarbearia();
+        return ResponseEntity.ok(new BarbeariaResponse(b.getNomeBarbearia(), b.getEndereco(), b.getFoto()));
+    }
+
     @GetMapping("/servicos")
     public ResponseEntity<?> listarServicos(@RequestParam Long barbeiroId) {
         Usuario barbeiro = usuarioRepository.findByIdComBarbearia(barbeiroId)
@@ -76,7 +85,6 @@ public class PublicoController {
             return erro(HttpStatus.BAD_REQUEST, "Barbeiro inválido.");
         }
         return ResponseEntity.ok(servicoRepository.findByBarbeariaIdOrderById(barbeiro.getBarbearia().getId()).stream()
-                // ignora registros incompletos (ex: serviço de teste sem nome/valor/duração)
                 .filter(s -> s.getNome() != null && s.getValor() != null && s.getDuracaoMinutos() != null)
                 .map(s -> new ServicoPublico(s.getId(), s.getNome(), s.getValor(), s.getDuracaoMinutos()))
                 .toList());
@@ -111,6 +119,7 @@ public class PublicoController {
             LocalDateTime fim = inicio.plusMinutes(duracao);
 
             if (inicio.isBefore(agora)) continue;
+            if (bloqueioRepository.existeConflito(barbeiroId, inicio, fim)) continue;
 
             boolean ocupado = doDia.stream().anyMatch(a -> {
                 LocalDateTime inicioExistente = a.getDataHora();
@@ -160,6 +169,11 @@ public class PublicoController {
                 req.servicoId(), barbeiro.getBarbearia().getId()).orElse(null);
         if (servicoValidado == null) {
             return erro(HttpStatus.BAD_REQUEST, "Serviço não encontrado nesta barbearia.");
+        }
+
+        int duracao = servicoValidado.getDuracaoMinutos() == null ? 0 : servicoValidado.getDuracaoMinutos();
+        if (bloqueioRepository.existeConflito(barbeiro.getId(), req.dataHora(), req.dataHora().plusMinutes(duracao))) {
+            return erro(HttpStatus.CONFLICT, "Esse horário não está mais disponível.");
         }
 
         Servico servico = new Servico();

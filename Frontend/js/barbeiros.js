@@ -4,6 +4,8 @@ const modalBarbeiroEl = document.getElementById("modal-barbeiro");
 const formBarbeiroEl = document.getElementById("form-barbeiro");
 const modalTituloEl = document.getElementById("modal-barbeiro-titulo");
 const nomeBarbeiroEl = document.getElementById("barbeiro-nome");
+const emailBarbeiroEl = document.getElementById("barbeiro-email");
+const senhaBarbeiroEl = document.getElementById("barbeiro-senha");
 const telefoneBarbeiroEl = document.getElementById("barbeiro-telefone");
 const cpfBarbeiroEl = document.getElementById("barbeiro-cpf");
 const erroBarbeiroEl = document.getElementById("barbeiro-form-erro");
@@ -14,7 +16,7 @@ let barbeiroEmEdicao = null;
 
 function renderizarBarbeiros(barbeiros) {
   listaBarbeirosEl.innerHTML = barbeiros
-    .map((barbeiro) => `
+      .map((barbeiro) => `
       <tr>
         <td>${escaparHtml(barbeiro.nome)}</td>
         <td>${escaparHtml(formatarTelefone(barbeiro.telefone))}</td>
@@ -29,7 +31,7 @@ function renderizarBarbeiros(barbeiros) {
         </td>
       </tr>
     `)
-    .join("");
+      .join("");
   barbeirosVazioEl.hidden = barbeiros.length > 0;
   listaBarbeirosEl.querySelectorAll("[data-editar-barbeiro]").forEach((botao) => {
     botao.addEventListener("click", () => abrirModal(botao.dataset.editarBarbeiro));
@@ -60,11 +62,15 @@ async function carregarPerfil() {
 
 function abrirModal(id = null) {
   barbeiroEmEdicao = id
-    ? barbeiros.find((barbeiro) => String(barbeiro.id) === String(id))
-    : null;
+      ? barbeiros.find((barbeiro) => String(barbeiro.id) === String(id))
+      : null;
   formBarbeiroEl.reset();
   modalTituloEl.textContent = barbeiroEmEdicao ? "Editar barbeiro" : "Adicionar barbeiro";
   nomeBarbeiroEl.value = barbeiroEmEdicao?.nome || "";
+  emailBarbeiroEl.value = barbeiroEmEdicao?.email || "";
+  senhaBarbeiroEl.value = "";
+  senhaBarbeiroEl.required = !barbeiroEmEdicao;
+  senhaBarbeiroEl.placeholder = barbeiroEmEdicao ? "Deixe em branco para manter a atual" : "Mínimo de 8 caracteres";
   telefoneBarbeiroEl.value = formatarTelefone(barbeiroEmEdicao?.telefone);
   cpfBarbeiroEl.value = formatarCpf(barbeiroEmEdicao?.cpf);
   erroBarbeiroEl.textContent = "";
@@ -80,10 +86,10 @@ function fecharModal() {
 async function excluirBarbeiro(id) {
   const barbeiro = barbeiros.find((item) => String(item.id) === String(id));
   if (
-    !barbeiro ||
-    !confirm(
-      `Excluir "${barbeiro.nome}"? Os agendamentos vinculados serão removidos; os registros financeiros serão mantidos.`,
-    )
+      !barbeiro ||
+      !confirm(
+          `Excluir "${barbeiro.nome}"? Os agendamentos vinculados serão removidos; os registros financeiros serão mantidos.`,
+      )
   ) return;
 
   try {
@@ -112,8 +118,8 @@ function formatarTelefone(valor) {
 function formatarCpf(valor) {
   const digitos = String(valor || "").replace(/\D/g, "");
   return digitos.length === 11
-    ? `${digitos.slice(0, 3)}.${digitos.slice(3, 6)}.${digitos.slice(6, 9)}-${digitos.slice(9)}`
-    : valor || "";
+      ? `${digitos.slice(0, 3)}.${digitos.slice(3, 6)}.${digitos.slice(6, 9)}-${digitos.slice(9)}`
+      : valor || "";
 }
 
 formBarbeiroEl.addEventListener("submit", async (event) => {
@@ -124,21 +130,23 @@ formBarbeiroEl.addEventListener("submit", async (event) => {
 
   try {
     const resposta = await apiFetch(
-      barbeiroEmEdicao ? `/api/barbeiros/${barbeiroEmEdicao.id}` : "/api/barbeiros",
-      {
-        method: barbeiroEmEdicao ? "PUT" : "POST",
-        body: JSON.stringify({
-          nome: nomeBarbeiroEl.value.trim(),
-          telefone: telefoneBarbeiroEl.value.trim(),
-          cpf: cpfBarbeiroEl.value.trim(),
-        }),
-      },
+        barbeiroEmEdicao ? `/api/barbeiros/${barbeiroEmEdicao.id}` : "/api/barbeiros",
+        {
+          method: barbeiroEmEdicao ? "PUT" : "POST",
+          body: JSON.stringify({
+            nome: nomeBarbeiroEl.value.trim(),
+            email: emailBarbeiroEl.value.trim(),
+            telefone: telefoneBarbeiroEl.value.trim(),
+            cpf: cpfBarbeiroEl.value.trim(),
+            ...(senhaBarbeiroEl.value ? { senha: senhaBarbeiroEl.value } : {}),
+          }),
+        },
     );
     if (!resposta || !resposta.ok) {
       const erro = resposta ? await resposta.json().catch(() => ({})) : {};
       const mensagem = resposta?.status === 403
-        ? erro.erro || "Sua conta não tem permissão para gerenciar barbeiros."
-        : erro.erro || "Não foi possível salvar o barbeiro.";
+          ? erro.erro || "Sua conta não tem permissão para gerenciar barbeiros."
+          : erro.erro || "Não foi possível salvar o barbeiro.";
       throw new Error(mensagem);
     }
     fecharModal();
@@ -169,7 +177,7 @@ telefoneBarbeiroEl.addEventListener("input", () => {
   if (digitos.length > 6) {
     const corte = digitos.length > 10 ? 7 : 6;
     telefoneBarbeiroEl.value =
-      `(${digitos.slice(0, 2)}) ${digitos.slice(2, corte)}-${digitos.slice(corte)}`;
+        `(${digitos.slice(0, 2)}) ${digitos.slice(2, corte)}-${digitos.slice(corte)}`;
   } else if (digitos.length > 2) {
     telefoneBarbeiroEl.value = `(${digitos.slice(0, 2)}) ${digitos.slice(2)}`;
   } else {
@@ -180,7 +188,7 @@ telefoneBarbeiroEl.addEventListener("input", () => {
 cpfBarbeiroEl.addEventListener("input", () => {
   const digitos = cpfBarbeiroEl.value.replace(/\D/g, "").slice(0, 11);
   cpfBarbeiroEl.value = digitos
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
 });

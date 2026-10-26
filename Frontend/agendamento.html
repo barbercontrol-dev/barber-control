@@ -1,215 +1,234 @@
 <!doctype html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  />
 
-    <link rel="stylesheet" href="css/style.css" />
-    <title>Agendamentos - Barber Control</title>
-  </head>
-  <body>
-    <aside class="sidebar">
-      <div class="profile-container">
-        <div class="profile-avatar">
-          <i class="fa-solid fa-user"></i>
-        </div>
-        <div class="profile-name" id="profile-name">Fulano</div>
-      </div>
+  <link rel="stylesheet" href="css/style.css" />
+  <title>Agendamentos - Barber Control</title>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="profile-container">
+    <div class="profile-avatar">
+      <i class="fa-solid fa-user"></i>
+    </div>
+    <div class="profile-name" id="profile-name">Fulano</div>
+  </div>
 
-      <ul class="nav-menu">
-        <li class="nav-item">
-          <a href="index.html" class="nav-link"
-            ><i class="fa-solid fa-house"></i> Início</a
-          >
-        </li>
-        <li class="nav-item">
-          <a href="#" class="nav-link active"
-            ><i class="fa-regular fa-calendar-days"></i> Agendamentos</a
-          >
-        </li>
-        <li class="nav-item">
-          <a href="servicos.html" class="nav-link"
-            ><i class="fa-solid fa-bars"></i> Serviços</a
-          >
-        </li>
-        <li class="nav-item">
-          <a href="barbeiros.html" class="nav-link"
-            ><i class="fa-solid fa-user-group"></i> Barbeiros</a
-          >
-        </li>
-        <li class="nav-item nav-financeiro">
-          <button type="button" class="nav-link nav-financeiro-toggle" aria-expanded="false">
-            <i class="fa-solid fa-wallet"></i> Financeiro
-            <i class="fa-solid fa-chevron-down nav-financeiro-chevron" aria-hidden="true"></i>
-          </button>
-          <ul class="nav-financeiro-submenu">
-            <li><a href="financeiro-entradas.html">Entrada</a></li>
-            <li><a href="financeiro-saidas.html">Saída</a></li>
-          </ul>
-        </li>
-        <li class="nav-item" style="border: none">
-          <a href="login.html" id="btn-logout" class="nav-link"
-            ><i class="fa-solid fa-arrow-right-from-bracket"></i> Sair</a
-          >
-        </li>
+  <ul class="nav-menu">
+    <li class="nav-item">
+      <a href="index.html" class="nav-link"
+      ><i class="fa-solid fa-house"></i> Início</a
+      >
+    </li>
+    <li class="nav-item">
+      <a href="#" class="nav-link active"
+      ><i class="fa-regular fa-calendar-days"></i> Agendamentos</a
+      >
+    </li>
+    <li class="nav-item">
+      <a href="servicos.html" class="nav-link"
+      ><i class="fa-solid fa-bars"></i> Serviços</a
+      >
+    </li>
+    <li class="nav-item">
+      <a href="barbeiros.html" class="nav-link"
+      ><i class="fa-solid fa-user-group"></i> Barbeiros</a
+      >
+    </li>
+    <li class="nav-item nav-financeiro">
+      <button type="button" class="nav-link nav-financeiro-toggle" aria-expanded="false">
+        <i class="fa-solid fa-wallet"></i> Financeiro
+        <i class="fa-solid fa-chevron-down nav-financeiro-chevron" aria-hidden="true"></i>
+      </button>
+      <ul class="nav-financeiro-submenu">
+        <li><a href="financeiro-entradas.html">Entrada</a></li>
+        <li><a href="financeiro-saidas.html">Saída</a></li>
       </ul>
-    </aside>
+    </li>
+    <li class="nav-item" style="border: none">
+      <a href="login.html" id="btn-logout" class="nav-link"
+      ><i class="fa-solid fa-arrow-right-from-bracket"></i> Sair</a
+      >
+    </li>
+  </ul>
+</aside>
 
-    <main class="main-content">
-      <div class="conteudo-agendamento">
-        <div class="welcome-header">
-          <h1>Novo agendamento</h1>
-          <p>
-            Calendário do mês. Selecione um dia para ver e registrar horários
-          </p>
+<main class="main-content">
+  <div class="conteudo-agendamento">
+    <div class="welcome-header">
+      <h1>Novo agendamento</h1>
+      <p>
+        Calendário do mês. Selecione um dia para ver e registrar horários
+      </p>
+    </div>
+
+    <div class="agendamento-grid">
+      <div class="calendario">
+        <div class="calendario-header">
+          <h2 id="mes-titulo">Agosto 2026</h2>
+          <span class="contador" id="total-mes"
+          >14 agendamentos no mês</span
+          >
         </div>
 
-        <div class="agendamento-grid">
-          <div class="calendario">
-            <div class="calendario-header">
-              <h2 id="mes-titulo">Agosto 2026</h2>
-              <span class="contador" id="total-mes"
-                >14 agendamentos no mês</span
-              >
+        <div class="calendario-grid" id="calendario">
+          <!-- dias preenchidos via JS -->
+        </div>
+      </div>
+
+      <div class="coluna-lateral">
+        <div class="seletor-agenda-barbeiro">
+          <label for="barbeiro-agenda">Agenda do barbeiro</label>
+          <select id="barbeiro-agenda" required>
+            <option value="todos">Todas as agendas</option>
+          </select>
+          <p>Para criar um agendamento, selecione um barbeiro específico.</p>
+        </div>
+        <div class="novo-agendamento">
+          <h3>Novo Agendamento</h3>
+          <p class="subtitulo" id="dia-selecionado-label">Dia 14/08/2026</p>
+
+          <form id="form-novo-agendamento">
+            <div class="campo">
+              <label for="cliente-nome">Cliente</label>
+              <input type="text" id="cliente-nome" required />
             </div>
 
-            <div class="calendario-grid" id="calendario">
-              <!-- dias preenchidos via JS -->
+            <div class="campo-linha">
+              <div class="campo">
+                <label for="servico">Serviço</label>
+                <select id="servico"></select>
+              </div>
+              <div class="campo">
+                <label for="horario">Horário</label>
+                <select id="horario"></select>
+              </div>
             </div>
+
+            <button type="submit" class="btn-agendar">+ Agendar</button>
+          </form>
+        </div>
+
+        <div class="agenda-do-dia">
+          <h3 id="agenda-dia-titulo">Agenda do dia 14/08</h3>
+          <div class="agenda-lista" id="agenda-lista">
+            <p class="agenda-vazia">
+              Nenhum horário agendado para este dia.
+            </p>
           </div>
+        </div>
 
-          <div class="coluna-lateral">
-            <div class="seletor-agenda-barbeiro">
-              <label for="barbeiro-agenda">Agenda do barbeiro</label>
-              <select id="barbeiro-agenda" required>
-                <option value="todos">Todas as agendas</option>
-              </select>
-              <p>Para criar um agendamento, selecione um barbeiro específico.</p>
-            </div>
-            <div class="novo-agendamento">
-              <h3>Novo Agendamento</h3>
-              <p class="subtitulo" id="dia-selecionado-label">Dia 14/08/2026</p>
-
-              <form id="form-novo-agendamento">
-                <div class="campo">
-                  <label for="cliente-nome">Cliente</label>
-                  <input type="text" id="cliente-nome" required />
-                </div>
-
-                <div class="campo-linha">
-                  <div class="campo">
-                    <label for="servico">Serviço</label>
-                    <select id="servico"></select>
-                  </div>
-                  <div class="campo">
-                    <label for="horario">Horário</label>
-                    <select id="horario"></select>
-                  </div>
-                </div>
-
-                <button type="submit" class="btn-agendar">+ Agendar</button>
-              </form>
-            </div>
-
-            <div class="agenda-do-dia">
-              <h3 id="agenda-dia-titulo">Agenda do dia 14/08</h3>
-              <div class="agenda-lista" id="agenda-lista">
-                <p class="agenda-vazia">
-                  Nenhum horário agendado para este dia.
-                </p>
+        <!-- Bloco de Horários Indisponíveis (Bloqueio) -->
+        <div class="agenda-do-dia">
+          <h3>Horários indisponíveis</h3>
+          <form id="form-bloqueio">
+            <div class="campo-linha">
+              <div class="campo">
+                <label for="bloqueio-inicio">Das</label>
+                <select id="bloqueio-inicio"></select>
+              </div>
+              <div class="campo">
+                <label for="bloqueio-fim">Até</label>
+                <select id="bloqueio-fim"></select>
               </div>
             </div>
+            <button type="submit" class="btn-agendar">Bloquear horário</button>
+          </form>
+          <div class="agenda-lista" id="bloqueios-lista" style="margin-top: 14px"></div>
+        </div>
 
-            <div
-              class="modal"
-              id="modal-edicao"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="modal-edicao-titulo"
-            >
-              <div class="modal-content modal-edicao-content">
-                <h3 id="modal-edicao-titulo">Editar agendamento</h3>
-                <form id="form-edicao-agendamento">
-                  <div class="campo">
-                    <label for="edicao-cliente-nome">Cliente</label>
-                    <input type="text" id="edicao-cliente-nome" required />
-                  </div>
-                  <div class="campo">
-                    <label for="edicao-servico">Serviço</label>
-                    <select id="edicao-servico" required></select>
-                  </div>
-                  <div class="campo">
-                    <label for="edicao-data-hora">Data e horário</label>
-                    <input
-                      type="datetime-local"
-                      id="edicao-data-hora"
-                      required
-                    />
-                  </div>
-                  <div class="modal-actions">
-                    <button
-                      type="button"
-                      class="btn-cancel"
-                      id="btn-cancelar-edicao"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type="submit"
-                      class="btn-save"
-                      id="btn-salvar-edicao"
-                    >
-                      Salvar
-                    </button>
-                  </div>
-                </form>
+        <div
+                class="modal"
+                id="modal-edicao"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="modal-edicao-titulo"
+        >
+          <div class="modal-content modal-edicao-content">
+            <h3 id="modal-edicao-titulo">Editar agendamento</h3>
+            <form id="form-edicao-agendamento">
+              <div class="campo">
+                <label for="edicao-cliente-nome">Cliente</label>
+                <input type="text" id="edicao-cliente-nome" required />
               </div>
-            </div>
+              <div class="campo">
+                <label for="edicao-servico">Serviço</label>
+                <select id="edicao-servico" required></select>
+              </div>
+              <div class="campo">
+                <label for="edicao-data-hora">Data e horário</label>
+                <input
+                        type="datetime-local"
+                        id="edicao-data-hora"
+                        required
+                />
+              </div>
+              <div class="modal-actions">
+                <button
+                        type="button"
+                        class="btn-cancel"
+                        id="btn-cancelar-edicao"
+                >
+                  Cancelar
+                </button>
+                <button
+                        type="submit"
+                        class="btn-save"
+                        id="btn-salvar-edicao"
+                >
+                  Salvar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
 
-            <div
-              class="modal"
-              id="modal-conclusao"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="modal-conclusao-titulo"
-            >
-              <div class="modal-content modal-edicao-content">
-                <h3 id="modal-conclusao-titulo">Concluir atendimento</h3>
-                <p>Escolha a forma de pagamento para registrar esta entrada no financeiro.</p>
-                <form id="form-conclusao">
-                  <div class="campo">
-                    <label for="conclusao-forma-pagamento">Forma de pagamento</label>
-                    <select id="conclusao-forma-pagamento" required>
-                      <option value="">Selecione</option>
-                      <option value="DINHEIRO">Dinheiro</option>
-                      <option value="PIX">Pix</option>
-                      <option value="DEBITO">Débito</option>
-                      <option value="CREDITO">Crédito</option>
-                    </select>
-                  </div>
-                  <p class="servico-form-erro" id="conclusao-feedback" role="alert"></p>
-                  <div class="modal-actions">
-                    <button type="button" class="btn-cancel" id="btn-cancelar-conclusao">
-                      Cancelar
-                    </button>
-                    <button type="submit" class="btn-save" id="btn-confirmar-conclusao">
-                      Concluir atendimento
-                    </button>
-                  </div>
-                </form>
+        <div
+                class="modal"
+                id="modal-conclusao"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="modal-conclusao-titulo"
+        >
+          <div class="modal-content modal-edicao-content">
+            <h3 id="modal-conclusao-titulo">Concluir atendimento</h3>
+            <p>Escolha a forma de pagamento para registrar esta entrada no financeiro.</p>
+            <form id="form-conclusao">
+              <div class="campo">
+                <label for="conclusao-forma-pagamento">Forma de pagamento</label>
+                <select id="conclusao-forma-pagamento" required>
+                  <option value="">Selecione</option>
+                  <option value="DINHEIRO">Dinheiro</option>
+                  <option value="PIX">Pix</option>
+                  <option value="DEBITO">Débito</option>
+                  <option value="CREDITO">Crédito</option>
+                </select>
               </div>
-            </div>
+              <p class="servico-form-erro" id="conclusao-feedback" role="alert"></p>
+              <div class="modal-actions">
+                <button type="button" class="btn-cancel" id="btn-cancelar-conclusao">
+                  Cancelar
+                </button>
+                <button type="submit" class="btn-save" id="btn-confirmar-conclusao">
+                  Concluir atendimento
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
-    </main>
+    </div>
+  </div>
+</main>
 
-    <script src="js/api.js"></script>
-    <script src="js/menu-financeiro.js"></script>
-    <script src="js/agendamento.js"></script>
-  </body>
+<script src="js/api.js"></script>
+<script src="js/menu-financeiro.js"></script>
+<script src="js/agendamento.js"></script>
+</body>
 </html>

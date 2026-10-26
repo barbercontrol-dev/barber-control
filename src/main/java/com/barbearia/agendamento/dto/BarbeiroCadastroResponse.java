@@ -1,4 +1,4 @@
 package com.barbearia.agendamento.dto;
 
-public record BarbeiroCadastroResponse(Long id, String nome, String telefone, String cpf) {
+public record BarbeiroCadastroResponse(Long id, String nome, String email, String telefone, String cpf) {
 }
