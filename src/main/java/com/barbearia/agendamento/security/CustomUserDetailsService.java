@@ -19,7 +19,8 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         Usuario usuario = usuarioService.buscarPorEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + email));
-        if (!"ADMIN".equals(usuario.getRole()) || usuario.getSenha() == null) {
+        boolean perfilValido = "ADMIN".equals(usuario.getRole()) || "BARBEIRO".equals(usuario.getRole());
+        if (!perfilValido || usuario.getSenha() == null) {
             throw new UsernameNotFoundException("Conta sem acesso ao sistema: " + email);
         }
 

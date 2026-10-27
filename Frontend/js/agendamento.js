@@ -16,12 +16,13 @@ const DIAS_SEMANA = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
 
 const hoje = new Date();
 let anoAtual = hoje.getFullYear();
-let mesAtual = hoje.getMonth(); // 0-indexado
+let mesAtual = hoje.getMonth();
 let diaSelecionado = hoje.getDate();
 
 let agendamentosDoMes = [];
 let servicosDisponiveis = [];
 let barbeirosDisponiveis = [];
+let bloqueios = [];
 
 const calendarioEl = document.getElementById("calendario");
 const mesTituloEl = document.getElementById("mes-titulo");
@@ -53,7 +54,12 @@ const botaoConfirmarConclusaoEl = document.getElementById(
 );
 let alteracaoStatusPendente = null;
 
-// ===== Identificar quem está logado, para mostrar o nome na sidebar =====
+// Elementos de Bloqueio de Horário
+const formBloqueioEl = document.getElementById("form-bloqueio");
+const bloqueioInicioEl = document.getElementById("bloqueio-inicio");
+const bloqueioFimEl = document.getElementById("bloqueio-fim");
+const bloqueiosListaEl = document.getElementById("bloqueios-lista");
+
 function decodeJwtPayload(token) {
   try {
     const payloadBase64 = token.split(".")[1];
@@ -91,7 +97,6 @@ function formatarData(dia, mes, ano) {
   return `${dd}/${mm}/${ano}`;
 }
 
-// Mostra o telefone (só dígitos no banco) no formato (61) 99999-9999
 function formatarTelefone(valor) {
   const d = String(valor || "").replace(/\D/g, "");
   if (d.length === 11)
@@ -123,11 +128,23 @@ function atualizarDisponibilidadeDoFormulario() {
   formNovoAgendamento.classList.toggle("todas-agendas", todasAgendas);
 }
 
+function horarioJaPassou(valor) {
+  const [h, m] = valor.split(":").map(Number);
+  return new Date(anoAtual, mesAtual, diaSelecionado, h, m) <= new Date();
+}
+
+function horarioBloqueado(valor) {
+  const [h, m] = valor.split(":").map(Number);
+  const momento = new Date(anoAtual, mesAtual, diaSelecionado, h, m);
+  return bloqueios.some((b) => momento >= new Date(b.inicio) && momento < new Date(b.fim));
+}
+
 function gerarHorarios() {
   horarioSelect.innerHTML = "";
   for (let h = 8; h <= 19; h++) {
     for (const m of ["00", "30"]) {
       const valor = `${String(h).padStart(2, "0")}:${m}`;
+      if (horarioJaPassou(valor) || horarioBloqueado(valor)) continue;
       const opt = document.createElement("option");
       opt.value = valor;
       opt.textContent = valor;
@@ -161,6 +178,105 @@ function servicosSelecionados(container, name) {
   ).map((checkbox) => Number(checkbox.value));
 }
 
+function popularHorariosBloqueio() {
+  if (!bloqueioInicioEl || !bloqueioFimEl) return;
+  const opcoes = [];
+  for (let h = 8; h <= 20; h++) {
+    for (const m of ["00", "30"]) {
+      if (h === 20 && m === "30") continue;
+      const valor = `${String(h).padStart(2, "0")}:${m}`;
+      opcoes.push(`<option value="${valor}">${valor}</option>`);
+    }
+  }
+  bloqueioInicioEl.innerHTML = opcoes.join("");
+  bloqueioFimEl.innerHTML = opcoes.join("");
+  bloqueioFimEl.selectedIndex = 1;
+}
+
+async function carregarBloqueios() {
+  if (barbeiroAgendaEl.value === "todos") {
+    bloqueios = [];
+    return;
+  }
+  const resp = await apiFetch(`/api/bloqueios?barbeiroId=${encodeURIComponent(barbeiroAgendaEl.value)}`);
+  bloqueios = resp && resp.ok ? await resp.json() : [];
+}
+
+function renderizarBloqueios() {
+  if (!bloqueiosListaEl) return;
+  if (barbeiroAgendaEl.value === "todos") {
+    bloqueiosListaEl.innerHTML = '<p class="agenda-vazia">Selecione um barbeiro para ver ou criar bloqueios.</p>';
+    return;
+  }
+  const doDia = bloqueios.filter((b) => {
+    const inicio = new Date(b.inicio);
+    return (inicio.getFullYear() === anoAtual && inicio.getMonth() === mesAtual && inicio.getDate() === diaSelecionado);
+  }).sort((a, b) => new Date(a.inicio) - new Date(b.inicio));
+
+  if (!doDia.length) {
+    bloqueiosListaEl.innerHTML = '<p class="agenda-vazia">Nenhum horário bloqueado neste dia.</p>';
+    return;
+  }
+
+  const hora = (valor) => new Date(valor).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  bloqueiosListaEl.innerHTML = doDia.map((b) => `
+        <div class="agenda-item">
+            <div><span class="horario">${hora(b.inicio)} – ${hora(b.fim)}</span>Indisponível</div>
+            <button type="button" class="btn-acao-agendamento btn-excluir-agendamento" data-remover-bloqueio="${b.id}">Remover</button>
+        </div>
+    `).join("");
+}
+
+if (bloqueiosListaEl) {
+  bloqueiosListaEl.addEventListener("click", async (event) => {
+    const botao = event.target.closest("[data-remover-bloqueio]");
+    if (!botao) return;
+    const resp = await apiFetch(`/api/bloqueios/${botao.dataset.removerBloqueio}`, { method: "DELETE" });
+    if (!resp || !resp.ok) {
+      alert("Não foi possível remover o bloqueio.");
+      return;
+    }
+    await carregarBloqueios();
+    atualizarPainelDoDia();
+  });
+}
+
+if (formBloqueioEl) {
+  formBloqueioEl.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (barbeiroAgendaEl.value === "todos") {
+      alert("Selecione um barbeiro específico para bloquear horários.");
+      return;
+    }
+    if (ehDiaAnterior(diaSelecionado, mesAtual, anoAtual)) {
+      alert("Não é possível bloquear um dia que já passou.");
+      return;
+    }
+    if (bloqueioFimEl.value <= bloqueioInicioEl.value) {
+      alert("O horário final deve ser depois do inicial.");
+      return;
+    }
+
+    const dia = `${anoAtual}-${String(mesAtual + 1).padStart(2, "0")}-${String(diaSelecionado).padStart(2, "0")}`;
+    const resp = await apiFetch("/api/bloqueios", {
+      method: "POST",
+      body: JSON.stringify({
+        barbeiro: { id: Number(barbeiroAgendaEl.value) },
+        inicio: `${dia}T${bloqueioInicioEl.value}:00`,
+        fim: `${dia}T${bloqueioFimEl.value}:00`,
+      }),
+    });
+
+    if (!resp || !resp.ok) {
+      const erro = resp ? await resp.json().catch(() => ({})) : {};
+      alert(erro.erro || "Não foi possível bloquear o horário.");
+      return;
+    }
+    await carregarBloqueios();
+    atualizarPainelDoDia();
+  });
+}
+
 async function carregarServicosEBarbeiros() {
   const respBarbeiros = await apiFetch("/api/barbeiros");
   if (!respBarbeiros || !respBarbeiros.ok) {
@@ -181,8 +297,13 @@ async function carregarServicosEBarbeiros() {
       '<option value="todos">Todas as agendas</option>';
   }
 
-  const respServicos = await apiFetch("/api/servicos");
+  const usuarioLogado = await Permissoes.usuario();
+  if (!Permissoes.ehAdmin(usuarioLogado) && usuarioLogado.barbeiroId) {
+    barbeiroAgendaEl.innerHTML = `<option value="${usuarioLogado.barbeiroId}">${escaparHtml(usuarioLogado.nome)}</option>`;
+    barbeiroAgendaEl.disabled = true;
+  }
 
+  const respServicos = await apiFetch("/api/servicos");
   if (!respServicos || !respServicos.ok) return;
 
   servicosDisponiveis = await respServicos.json();
@@ -265,6 +386,9 @@ function selecionarDia(dia) {
 
 function atualizarPainelDoDia() {
   atualizarDisponibilidadeDoFormulario();
+  gerarHorarios();
+  renderizarBloqueios();
+
   const dataFormatada = formatarData(diaSelecionado, mesAtual, anoAtual);
   diaSelecionadoLabelEl.textContent = `Dia ${dataFormatada}`;
   agendaDiaTituloEl.textContent = `Agenda do dia ${String(diaSelecionado).padStart(2, "0")}/${String(mesAtual + 1).padStart(2, "0")}`;
@@ -505,7 +629,6 @@ formEdicaoEl.addEventListener("submit", async (event) => {
       servico: { id: servicoIds[0] },
       servicos: servicoIds.map((id) => ({ id })),
       clienteNome: edicaoClienteNomeEl.value.trim(),
-      // manda o telefone de volta, senão o backend o apaga ao editar
       clienteTelefone: agendamentoEmEdicao.clienteTelefone,
       dataHora: edicaoDataHoraEl.value + ":00",
     }),
@@ -584,16 +707,19 @@ formNovoAgendamento.addEventListener("submit", async (e) => {
 });
 
 async function iniciar() {
+  popularHorariosBloqueio();
   gerarHorarios();
   await identificarUsuarioLogado();
   await carregarServicosEBarbeiros();
   await carregarAgendamentosDoMes();
+  await carregarBloqueios();
   renderizarCalendario();
   atualizarPainelDoDia();
 }
 
 barbeiroAgendaEl.addEventListener("change", async () => {
   await carregarAgendamentosDoMes();
+  await carregarBloqueios();
   renderizarCalendario();
   atualizarPainelDoDia();
 });

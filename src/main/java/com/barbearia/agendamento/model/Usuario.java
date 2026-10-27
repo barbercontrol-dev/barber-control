@@ -25,7 +25,6 @@ public class Usuario {
     @Column(unique = true)
     private String email;
 
-    // WRITE_ONLY: a API aceita a senha na entrada (cadastro/login), mas nunca a devolve nas respostas
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String senha;
 
@@ -38,6 +37,15 @@ public class Usuario {
     private String telefone;
 
     private String nomeBarbearia;
+
+    @Column(length = 255)
+    private String endereco;
+
+    @Lob
+    @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private String foto;
 
     private String role;
 

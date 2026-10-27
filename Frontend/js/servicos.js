@@ -37,12 +37,12 @@ function formatarDuracao(minutos) {
 function renderizarServicos() {
   const termo = buscaServicoEl.value.trim().toLowerCase();
   const filtrados = servicos.filter((servico) =>
-    (servico.nome || "").toLowerCase().includes(termo),
+      (servico.nome || "").toLowerCase().includes(termo),
   );
 
   listaServicosEl.innerHTML = filtrados
-    .map(
-      (servico) => `
+      .map(
+          (servico) => `
         <tr>
           <td>S${String(servico.id).padStart(3, "0")}</td>
           <td class="servico-nome-tabela">${escaparHtml(servico.nome)}</td>
@@ -58,31 +58,31 @@ function renderizarServicos() {
           </td>
         </tr>
       `,
-    )
-    .join("");
+      )
+      .join("");
 
   servicosVazioEl.hidden = filtrados.length > 0;
   listaServicosEl.querySelectorAll("[data-editar-servico]").forEach((botao) => {
     botao.addEventListener("click", () =>
-      abrirModalServico(botao.dataset.editarServico),
+        abrirModalServico(botao.dataset.editarServico),
     );
   });
   listaServicosEl
-    .querySelectorAll("[data-excluir-servico]")
-    .forEach((botao) => {
-      botao.addEventListener("click", () =>
-        excluirServico(botao.dataset.excluirServico),
-      );
-    });
+      .querySelectorAll("[data-excluir-servico]")
+      .forEach((botao) => {
+        botao.addEventListener("click", () =>
+            excluirServico(botao.dataset.excluirServico),
+        );
+      });
 }
 
 function abrirModalServico(id = null) {
   servicoEmEdicao = id
-    ? servicos.find((servico) => String(servico.id) === String(id))
-    : null;
+      ? servicos.find((servico) => String(servico.id) === String(id))
+      : null;
   modalTituloEl.textContent = servicoEmEdicao
-    ? "Editar serviço"
-    : "Adicionar serviço";
+      ? "Editar serviço"
+      : "Adicionar serviço";
   nomeServicoEl.value = servicoEmEdicao?.nome || "";
   valorServicoEl.value = servicoEmEdicao?.valor ?? "";
   duracaoServicoEl.value = servicoEmEdicao?.duracaoMinutos ?? "";
@@ -134,8 +134,8 @@ formServicoEl.addEventListener("submit", async (event) => {
 
   try {
     const endpoint = servicoEmEdicao
-      ? `/api/servicos/${servicoEmEdicao.id}`
-      : "/api/servicos";
+        ? `/api/servicos/${servicoEmEdicao.id}`
+        : "/api/servicos";
     const resposta = await apiFetch(endpoint, {
       method: servicoEmEdicao ? "PUT" : "POST",
       body: JSON.stringify(payload),
@@ -156,11 +156,11 @@ formServicoEl.addEventListener("submit", async (event) => {
 });
 
 document
-  .getElementById("btn-adicionar-servico")
-  .addEventListener("click", () => abrirModalServico());
+    .getElementById("btn-adicionar-servico")
+    .addEventListener("click", () => abrirModalServico());
 document
-  .getElementById("btn-cancelar-servico")
-  .addEventListener("click", fecharModalServico);
+    .getElementById("btn-cancelar-servico")
+    .addEventListener("click", fecharModalServico);
 modalServicoEl.addEventListener("click", (event) => {
   if (event.target === modalServicoEl) fecharModalServico();
 });
@@ -182,3 +182,11 @@ async function carregarPerfil() {
 }
 
 Promise.all([carregarPerfil(), carregarServicos()]);
+
+// Oculta botões de cadastro/edição caso o usuário logado não seja o admin
+Permissoes.usuario().then((u) => {
+  if (Permissoes.ehAdmin(u)) return;
+  const estilo = document.createElement("style");
+  estilo.textContent = "#btn-adicionar-servico, .servico-acoes { display: none !important; }";
+  document.head.appendChild(estilo);
+});

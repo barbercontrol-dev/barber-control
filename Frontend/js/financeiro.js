@@ -13,7 +13,7 @@ let graficoDistribuicao = null;
 
 const dataHoje = new Date();
 const dataLocal = (data) =>
-  `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}-${String(data.getDate()).padStart(2, "0")}`;
+    `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}-${String(data.getDate()).padStart(2, "0")}`;
 const inicioMes = new Date(dataHoje.getFullYear(), dataHoje.getMonth(), 1);
 
 const periodoInicioEl = document.getElementById("periodo-inicio");
@@ -124,6 +124,7 @@ async function carregarServicos() {
 
   servicosDisponiveis = await resposta.json();
   const listaEl = document.getElementById("lista-servicos-financeiro");
+  if (!listaEl) return;
   if (servicosDisponiveis.length === 0) {
     listaEl.innerHTML = '<p class="financeiro-vazio">Cadastre serviços antes de registrar um atendimento.</p>';
     return;
@@ -144,8 +145,9 @@ function atualizarTotalPreview() {
   if (tipoFinanceiro !== "ENTRADA") return;
 
   const total = Array.from(document.querySelectorAll('input[name="servicoIds"]:checked'))
-    .reduce((soma, checkbox) => soma + Number(checkbox.dataset.valor || 0), 0);
-  document.getElementById("total-preview").textContent = formatarMoeda(total);
+      .reduce((soma, checkbox) => soma + Number(checkbox.dataset.valor || 0), 0);
+  const totalPreviewEl = document.getElementById("total-preview");
+  if (totalPreviewEl) totalPreviewEl.textContent = formatarMoeda(total);
 }
 
 function parseDataLocal(valor) {
@@ -163,7 +165,7 @@ function criarChavesPeriodo() {
   const inicio = parseDataLocal(inicioValor);
   const fim = parseDataLocal(fimValor);
   const dias = Math.floor((Date.UTC(fim.getFullYear(), fim.getMonth(), fim.getDate())
-    - Date.UTC(inicio.getFullYear(), inicio.getMonth(), inicio.getDate())) / 86400000) + 1;
+      - Date.UTC(inicio.getFullYear(), inicio.getMonth(), inicio.getDate())) / 86400000) + 1;
   const agruparPorDia = dias <= 31;
   const chaves = [];
 
@@ -219,12 +221,12 @@ function atualizarIndicadores() {
   }
 
   const maiorGasto = operacoes.reduce(
-    (maior, operacao) => Number(operacao.valor) > Number(maior.valor || 0) ? operacao : maior,
-    { valor: 0 },
+      (maior, operacao) => Number(operacao.valor) > Number(maior.valor || 0) ? operacao : maior,
+      { valor: 0 },
   );
   document.getElementById("kpi-destaque").textContent = formatarMoeda(maiorGasto.valor);
   document.getElementById("kpi-destaque-legenda").textContent =
-    maiorGasto.descricao || "No período selecionado";
+      maiorGasto.descricao || "No período selecionado";
 }
 
 function renderizarGraficoTendencia() {
@@ -272,8 +274,8 @@ function renderizarGraficoDistribuicao() {
   const agrupamentos = new Map();
   movimentosParaIndicadores().forEach((operacao) => {
     const chave = operacao.formaPagamento === "PENDENTE"
-      ? "Pagamento pendente"
-      : formatarFormaPagamento(operacao.formaPagamento || "Não informado");
+        ? "Pagamento pendente"
+        : formatarFormaPagamento(operacao.formaPagamento || "Não informado");
     agrupamentos.set(chave, (agrupamentos.get(chave) || 0) + Number(operacao.valor || 0));
   });
 
@@ -334,8 +336,8 @@ function renderizarOperacoes() {
   listaOperacoesEl.innerHTML = operacoes.slice(0, 8).map((operacao) => {
     const titulo = tipoFinanceiro === "ENTRADA" ? operacao.nomeCliente : operacao.descricao;
     const detalhe = tipoFinanceiro === "ENTRADA"
-      ? (operacao.servicos || []).map((servico) => servico.nome).join(", ")
-      : operacao.categoria;
+        ? (operacao.servicos || []).map((servico) => servico.nome).join(", ")
+        : operacao.categoria;
     return `
       <article class="operacao-item">
         <div class="operacao-detalhes">
@@ -353,6 +355,8 @@ async function buscarAtendimentosPendentes() {
   if (tipoFinanceiro !== "ENTRADA") return [];
   const painel = document.getElementById("atendimentos-pendentes");
   const lista = document.getElementById("lista-atendimentos-pendentes");
+  if (!painel || !lista) return [];
+
   const parametros = new URLSearchParams({
     inicio: periodoInicioEl.value,
     fim: periodoFimEl.value,
@@ -457,22 +461,22 @@ async function registrarOperacao(evento) {
 
   const dados = new FormData(formRegistroEl);
   const payload = tipoFinanceiro === "ENTRADA"
-    ? {
-      tipo: tipoFinanceiro,
-      data: dataRegistroEl.value,
-      nomeCliente: dados.get("nomeCliente").trim(),
-      servicoIds: Array.from(document.querySelectorAll('input[name="servicoIds"]:checked'))
-        .map((checkbox) => Number(checkbox.value)),
-      formaPagamento: document.getElementById("forma-pagamento").value,
-    }
-    : {
-      tipo: tipoFinanceiro,
-      data: dataRegistroEl.value,
-      descricao: document.getElementById("descricao").value.trim(),
-      categoria: document.getElementById("categoria").value,
-      valor: Number(document.getElementById("valor").value),
-      formaPagamento: document.getElementById("forma-pagamento").value,
-    };
+      ? {
+        tipo: tipoFinanceiro,
+        data: dataRegistroEl.value,
+        nomeCliente: dados.get("nomeCliente").trim(),
+        servicoIds: Array.from(document.querySelectorAll('input[name="servicoIds"]:checked'))
+            .map((checkbox) => Number(checkbox.value)),
+        formaPagamento: document.getElementById("forma-pagamento").value,
+      }
+      : {
+        tipo: tipoFinanceiro,
+        data: dataRegistroEl.value,
+        descricao: document.getElementById("descricao").value.trim(),
+        categoria: document.getElementById("categoria").value,
+        valor: Number(document.getElementById("valor").value),
+        formaPagamento: document.getElementById("forma-pagamento").value,
+      };
 
   if (tipoFinanceiro === "ENTRADA" && payload.servicoIds.length === 0) {
     feedbackEl.textContent = "Selecione ao menos um serviço.";
@@ -494,7 +498,8 @@ async function registrarOperacao(evento) {
     formRegistroEl.reset();
     dataRegistroEl.value = dataLocal(new Date());
     if (tipoFinanceiro === "ENTRADA") {
-      document.getElementById("total-preview").textContent = formatarMoeda(0);
+      const totalPreviewEl = document.getElementById("total-preview");
+      if (totalPreviewEl) totalPreviewEl.textContent = formatarMoeda(0);
     }
     await carregarOperacoes();
     mostrarStatus(tipoFinanceiro === "ENTRADA" ? "Atendimento registrado com sucesso." : "Despesa registrada com sucesso.");
@@ -518,5 +523,13 @@ document.getElementById("lista-atendimentos-pendentes")?.addEventListener("click
 configurarLogout();
 
 Promise.all([carregarPerfil(), carregarBarbeiros(), carregarServicos()])
-  .then(carregarOperacoes)
-  .catch((erro) => mostrarStatus(erro.message || "Não foi possível carregar os dados financeiros.", true));
+    .then(carregarOperacoes)
+    .catch((erro) => mostrarStatus(erro.message || "Não foi possível carregar os dados financeiros.", true));
+
+// Oculta o formulário de registro financeiro caso o usuário logado seja um barbeiro
+Permissoes.usuario().then((u) => {
+  if (Permissoes.ehAdmin(u)) return;
+  document.querySelector(".formulario-financeiro")?.setAttribute("hidden", "");
+  const conteudo = document.querySelector(".financeiro-conteudo");
+  if (conteudo) conteudo.style.gridTemplateColumns = "1fr";
+});

@@ -126,6 +126,18 @@
           </p>
         </div>
 
+        <div
+          id="barbearia-info"
+          style="display: none; margin-bottom: 16px; color: #f2f2f2"
+        >
+          <img
+            id="barbearia-foto"
+            alt="Foto da barbearia"
+            style="max-width: 320px; border-radius: 12px; display: block; margin-bottom: 8px"
+          />
+          <p id="barbearia-endereco"></p>
+        </div>
+
         <div class="mensagem" id="mensagem"></div>
 
         <div class="agendamento-grid">
@@ -365,6 +377,31 @@
         atualizarResumo();
       }
 
+      async function carregarBarbearia() {
+        const info = el("barbearia-info");
+        info.style.display = "none";
+        if (!selBarbeiro.value) return;
+
+        try {
+          const resposta = await fetch(
+            `${API}/barbearia?barbeiroId=${encodeURIComponent(selBarbeiro.value)}`,
+          );
+          if (!resposta.ok) {
+            throw new Error("Não foi possível carregar os dados da barbearia.");
+          }
+
+          const dados = await resposta.json();
+          const foto = el("barbearia-foto");
+          const endereco = el("barbearia-endereco");
+          foto.src = dados.foto || "";
+          foto.style.display = dados.foto ? "block" : "none";
+          endereco.textContent = dados.endereco ? `📍 ${dados.endereco}` : "";
+          info.style.display = dados.foto || dados.endereco ? "block" : "none";
+        } catch (erro) {
+          console.error(erro);
+        }
+      }
+
       /*  Horários livres  */
       async function carregarHorarios() {
         const lista = el("horarios-lista");
@@ -390,7 +427,13 @@
           const res = await fetch(
             `${API}/horarios?barbeiroId=${selBarbeiro.value}&servicoId=${selServico.value}&data=${dataSelecionada}`,
           );
-          const horarios = await res.json();
+          const dados = await res.json();
+          const horarios = Array.isArray(dados)
+            ? dados.filter(
+                (horario) =>
+                  new Date(`${dataSelecionada}T${horario}:00`) > new Date(),
+              )
+            : [];
 
           lista.innerHTML = "";
           if (!res.ok || horarios.length === 0) {
@@ -444,6 +487,7 @@
             (b) => `${b.nome} — ${b.barbearia}`,
           );
           await carregarServicosDoBarbeiro();
+          await carregarBarbearia();
           carregarHorarios();
         } catch (e) {
           mostrarMensagem(
@@ -517,6 +561,7 @@
       selBarbeiro.addEventListener("change", async () => {
         try {
           await carregarServicosDoBarbeiro();
+          await carregarBarbearia();
           carregarHorarios();
         } catch (e) {
           mostrarMensagem(

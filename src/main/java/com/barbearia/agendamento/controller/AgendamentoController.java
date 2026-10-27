@@ -1,8 +1,12 @@
 package com.barbearia.agendamento.controller;
 
 import com.barbearia.agendamento.model.Agendamento;
+import com.barbearia.agendamento.model.Servico;
 import com.barbearia.agendamento.model.Usuario;
+import com.barbearia.agendamento.repository.BloqueioRepository;
+import com.barbearia.agendamento.repository.ServicoRepository;
 import com.barbearia.agendamento.service.AgendamentoService;
+import com.barbearia.agendamento.service.ContextoUsuario;
 import com.barbearia.agendamento.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -10,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 
@@ -23,35 +28,80 @@ public class AgendamentoController {
     @Autowired
     private UsuarioService usuarioService;
 
+    @Autowired
+    private ContextoUsuario contexto;
+
+    @Autowired
+    private ServicoRepository servicoRepository;
+
+    @Autowired
+    private BloqueioRepository bloqueioRepository;
+
+    private Optional<Agendamento> acessivel(Long id, ContextoUsuario.Atual ctx) {
+        return agendamentoService.buscarPorIdDaBarbearia(id, ctx.barbeariaId())
+                .filter(a -> ctx.admin() || a.getBarbeiro().getId().equals(ctx.usuario().getId()));
+    }
+
+    private ResponseEntity<?> erro(HttpStatus status, String mensagem) {
+        return ResponseEntity.status(status).body(Map.of("erro", mensagem));
+    }
+
+    private ResponseEntity<?> validarHorario(Usuario barbeiro, Long servicoId, LocalDateTime inicio, Long barbeariaId) {
+        if (inicio == null || servicoId == null) {
+            return erro(HttpStatus.BAD_REQUEST, "Informe o serviço e o horário.");
+        }
+        if (inicio.isBefore(LocalDateTime.now())) {
+            return erro(HttpStatus.BAD_REQUEST, "Esse horário já passou.");
+        }
+        Servico servico = servicoRepository.findByIdAndBarbeariaId(servicoId, barbeariaId).orElse(null);
+        if (servico == null || servico.getDuracaoMinutos() == null) {
+            return erro(HttpStatus.BAD_REQUEST, "Serviço inválido.");
+        }
+        if (bloqueioRepository.existeConflito(barbeiro.getId(), inicio, inicio.plusMinutes(servico.getDuracaoMinutos()))) {
+            return erro(HttpStatus.CONFLICT, "Horário indisponível para este barbeiro.");
+        }
+        return null;
+    }
+
     @PostMapping
     public ResponseEntity<?> criarAgendamento(@RequestBody Agendamento agendamento,
                                               Authentication authentication) {
-    try {
-        Usuario responsavel = usuarioService.buscarResponsavel(authentication.getName());
-        Long barbeiroId = agendamento.getBarbeiro() != null ? agendamento.getBarbeiro().getId() : null;
-        if (barbeiroId == null) {
-            return ResponseEntity.badRequest().body(Map.of("erro", "Selecione um barbeiro."));
+        try {
+            var ctx = contexto.de(authentication);
+            Usuario barbeiro;
+            if (ctx.admin()) {
+                Long barbeiroId = agendamento.getBarbeiro() != null ? agendamento.getBarbeiro().getId() : null;
+                if (barbeiroId == null) {
+                    return ResponseEntity.badRequest().body(Map.of("erro", "Selecione um barbeiro."));
+                }
+                barbeiro = usuarioService.buscarBarbeiroDaBarbearia(barbeiroId, ctx.barbeariaId());
+            } else {
+                barbeiro = ctx.usuario();
+            }
+
+            Long servicoId = agendamento.getServico() != null ? agendamento.getServico().getId() : null;
+            ResponseEntity<?> invalido = validarHorario(barbeiro, servicoId, agendamento.getDataHora(), ctx.barbeariaId());
+            if (invalido != null) return invalido;
+
+            agendamento.setBarbeiro(barbeiro);
+            return ResponseEntity.ok(agendamentoService.criarAgendamento(agendamento));
+        } catch (IllegalStateException e) {
+            return erro(HttpStatus.CONFLICT, e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return erro(HttpStatus.BAD_REQUEST, e.getMessage());
         }
-        Usuario barbeiro = usuarioService.buscarBarbeiroDaBarbearia(barbeiroId, responsavel.getId());
-        agendamento.setBarbeiro(barbeiro);
-        Agendamento criado = agendamentoService.criarAgendamento(agendamento);
-        return ResponseEntity.ok(criado);
-    } catch (IllegalStateException e) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("erro", e.getMessage()));
-    } catch (IllegalArgumentException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("erro", e.getMessage()));
     }
-}
 
     @GetMapping
     public ResponseEntity<?> listarAgendamentos(@RequestParam(required = false) Long barbeiroId,
-                                                 Authentication authentication) {
+                                                Authentication authentication) {
         try {
-            Usuario responsavel = usuarioService.buscarResponsavel(authentication.getName());
-            if (barbeiroId != null) {
-                usuarioService.buscarBarbeiroDaBarbearia(barbeiroId, responsavel.getId());
+            var ctx = contexto.de(authentication);
+            Long filtro = ctx.admin() ? barbeiroId : ctx.usuario().getId();
+            if (ctx.admin() && barbeiroId != null) {
+                usuarioService.buscarBarbeiroDaBarbearia(barbeiroId, ctx.barbeariaId());
             }
-            return ResponseEntity.ok(agendamentoService.listarDaBarbearia(responsavel.getId(), barbeiroId));
+            return ResponseEntity.ok(agendamentoService.listarDaBarbearia(ctx.barbeariaId(), filtro));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
         }
@@ -61,35 +111,50 @@ public class AgendamentoController {
     public ResponseEntity<?> listarPorBarbeiro(@PathVariable Long barbeiroId,
                                                Authentication authentication) {
         try {
-            Usuario responsavel = usuarioService.buscarResponsavel(authentication.getName());
-            usuarioService.buscarBarbeiroDaBarbearia(barbeiroId, responsavel.getId());
-            return ResponseEntity.ok(agendamentoService.listarDaBarbearia(responsavel.getId(), barbeiroId));
+            var ctx = contexto.de(authentication);
+            if (!ctx.admin() && !barbeiroId.equals(ctx.usuario().getId())) {
+                return erro(HttpStatus.FORBIDDEN, "Você só pode ver a sua própria agenda.");
+            }
+            if (ctx.admin()) {
+                usuarioService.buscarBarbeiroDaBarbearia(barbeiroId, ctx.barbeariaId());
+            }
+            return ResponseEntity.ok(agendamentoService.listarDaBarbearia(ctx.barbeariaId(), barbeiroId));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
         }
     }
 
     @GetMapping("/{id}")
-    public Optional<Agendamento> buscarPorId(@PathVariable Long id, Authentication authentication) {
-        Usuario responsavel = usuarioService.buscarResponsavel(authentication.getName());
-        return agendamentoService.buscarPorIdDaBarbearia(id, responsavel.getId());
+    public ResponseEntity<?> buscarPorId(@PathVariable Long id, Authentication authentication) {
+        return acessivel(id, contexto.de(authentication))
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> atualizarAgendamento(@PathVariable Long id,
-                                                   @RequestBody Agendamento agendamentoAtualizado,
-                                                   Authentication authentication) {
+                                                  @RequestBody Agendamento agendamentoAtualizado,
+                                                  Authentication authentication) {
         try {
-            Usuario responsavel = usuarioService.buscarResponsavel(authentication.getName());
-            if (agendamentoService.buscarPorIdDaBarbearia(id, responsavel.getId()).isEmpty()) {
+            var ctx = contexto.de(authentication);
+            Optional<Agendamento> existente = acessivel(id, ctx);
+            if (existente.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
-            Agendamento atualizado = agendamentoService.atualizarAgendamento(id, agendamentoAtualizado);
-            return ResponseEntity.ok(atualizado);
+            Long servicoId = agendamentoAtualizado.getServico() != null
+                    ? agendamentoAtualizado.getServico().getId()
+                    : existente.get().getServico().getId();
+            LocalDateTime inicio = agendamentoAtualizado.getDataHora() != null
+                    ? agendamentoAtualizado.getDataHora()
+                    : existente.get().getDataHora();
+            ResponseEntity<?> invalido = validarHorario(existente.get().getBarbeiro(), servicoId, inicio, ctx.barbeariaId());
+            if (invalido != null) return invalido;
+
+            return ResponseEntity.ok(agendamentoService.atualizarAgendamento(id, agendamentoAtualizado));
         } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("erro", e.getMessage()));
+            return erro(HttpStatus.CONFLICT, e.getMessage());
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
+            return erro(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 
@@ -97,8 +162,7 @@ public class AgendamentoController {
     public ResponseEntity<?> atualizarStatus(@PathVariable Long id,
                                              @RequestBody Map<String, String> body,
                                              Authentication authentication) {
-        Usuario responsavel = usuarioService.buscarResponsavel(authentication.getName());
-        if (agendamentoService.buscarPorIdDaBarbearia(id, responsavel.getId()).isEmpty()) {
+        if (acessivel(id, contexto.de(authentication)).isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         try {
@@ -114,15 +178,11 @@ public class AgendamentoController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarAgendamento(@PathVariable Long id, Authentication authentication) {
-        Usuario responsavel = usuarioService.buscarResponsavel(authentication.getName());
-        if (agendamentoService.buscarPorIdDaBarbearia(id, responsavel.getId()).isEmpty()) {
+        Optional<Agendamento> agendamento = acessivel(id, contexto.de(authentication));
+        if (agendamento.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        agendamentoService.deletarAgendamentoDoBarbeiro(
-                id,
-                agendamentoService.buscarPorIdDaBarbearia(id, responsavel.getId()).orElseThrow()
-                        .getBarbeiro().getId()
-        );
+        agendamentoService.deletarAgendamentoDoBarbeiro(id, agendamento.get().getBarbeiro().getId());
         return ResponseEntity.noContent().build();
     }
 }

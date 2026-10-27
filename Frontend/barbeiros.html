@@ -99,6 +99,44 @@
             </p>
           </div>
         </div>
+
+        <div class="servicos-panel" style="margin-top: 24px">
+          <h3 style="margin: 0 20px 16px">Dados da barbearia</h3>
+          <form id="form-barbearia" style="margin: 0 20px">
+            <div class="campo-servico">
+              <label for="barbearia-endereco">Localização (endereço)</label>
+              <input
+                type="text"
+                id="barbearia-endereco"
+                maxlength="255"
+                placeholder="Rua, número, bairro, cidade"
+              />
+            </div>
+            <div class="campo-servico">
+              <label for="barbearia-foto">Foto da barbearia</label>
+              <input
+                type="file"
+                id="barbearia-foto"
+                accept="image/png,image/jpeg,image/webp"
+              />
+              <img
+                id="barbearia-preview"
+                alt="Foto da barbearia"
+                style="display: none; max-width: 280px; margin-top: 10px; border-radius: 10px"
+              />
+              <button
+                type="button"
+                class="btn-cancel"
+                id="barbearia-remover-foto"
+                style="margin-top: 8px"
+              >
+                Remover foto
+              </button>
+            </div>
+            <p class="servico-form-erro" id="barbearia-msg" role="status"></p>
+            <button type="submit" class="btn-save">Salvar dados da barbearia</button>
+          </form>
+        </div>
       </section>
     </main>
 
@@ -120,6 +158,25 @@
               required
               maxlength="120"
               autocomplete="name"
+            />
+          </div>
+          <div class="campo-servico">
+            <label for="barbeiro-email">E-mail (usado no login)</label>
+            <input
+              type="email"
+              id="barbeiro-email"
+              required
+              maxlength="160"
+              autocomplete="off"
+            />
+          </div>
+          <div class="campo-servico">
+            <label for="barbeiro-senha">Senha</label>
+            <input
+              type="password"
+              id="barbeiro-senha"
+              minlength="8"
+              autocomplete="new-password"
             />
           </div>
           <div class="campo-servico">
@@ -162,5 +219,6 @@
     <script src="js/api.js"></script>
     <script src="js/menu-financeiro.js"></script>
     <script src="js/barbeiros.js"></script>
+    <script src="js/barbearia.js"></script>
   </body>
 </html>
