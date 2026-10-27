@@ -38,6 +38,9 @@ public class ServicoService {
             servico.setNome(servicoAtualizado.getNome());
             servico.setValor(servicoAtualizado.getValor());
             servico.setDuracaoMinutos(servicoAtualizado.getDuracaoMinutos());
+            if (servicoAtualizado.getFoto() != null) {
+                servico.setFoto(servicoAtualizado.getFoto());
+            }
             return servicoRepository.save(servico);
         } else {
             return null;

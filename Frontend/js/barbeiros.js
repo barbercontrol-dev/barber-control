@@ -19,6 +19,7 @@ function renderizarBarbeiros(barbeiros) {
       .map((barbeiro) => `
       <tr>
         <td>${escaparHtml(barbeiro.nome)}</td>
+        <td>${escaparHtml(barbeiro.email)}</td>
         <td>${escaparHtml(formatarTelefone(barbeiro.telefone))}</td>
         <td>${escaparHtml(formatarCpf(barbeiro.cpf))}</td>
         <td class="servico-acoes">

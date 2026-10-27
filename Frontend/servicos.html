@@ -124,6 +124,17 @@
             <label for="servico-nome">Nome</label>
             <input type="text" id="servico-nome" required maxlength="120" />
           </div>
+          <div class="campo-servico">
+            <label for="servico-foto">Foto do serviço</label>
+            <input
+              type="file"
+              id="servico-foto"
+              accept="image/png,image/jpeg,image/webp"
+              aria-describedby="servico-foto-ajuda"
+            />
+            <small id="servico-foto-ajuda">Obrigatória. PNG, JPEG ou WEBP.</small>
+            <img id="servico-foto-preview" alt="Prévia da foto do serviço" />
+          </div>
           <div class="campo-servico-linha">
             <div class="campo-servico">
               <label for="servico-valor">Valor (R$)</label>
@@ -161,6 +172,7 @@
 
     <script src="js/config.js"></script>
     <script src="js/api.js"></script>
+    <script src="js/sidebar-barbearia.js"></script>
     <script src="js/menu-financeiro.js"></script>
     <script src="js/servicos.js"></script>
   </body>

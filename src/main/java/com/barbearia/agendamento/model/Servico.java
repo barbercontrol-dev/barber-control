@@ -3,7 +3,9 @@ package com.barbearia.agendamento.model;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.math.BigDecimal;
 
@@ -33,4 +35,9 @@ public class Servico {
 
     @Column(name = "barbearia_id")
     private Long barbeariaId;
+
+    @Lob
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private String foto;
 }

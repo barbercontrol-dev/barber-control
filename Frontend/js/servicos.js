@@ -7,12 +7,46 @@ const modalTituloEl = document.getElementById("modal-servico-titulo");
 const nomeServicoEl = document.getElementById("servico-nome");
 const valorServicoEl = document.getElementById("servico-valor");
 const duracaoServicoEl = document.getElementById("servico-duracao");
+const fotoServicoEl = document.getElementById("servico-foto");
+const fotoServicoPreviewEl = document.getElementById("servico-foto-preview");
 const erroServicoEl = document.getElementById("servico-form-erro");
 const btnSalvarServicoEl = document.getElementById("btn-salvar-servico");
 const profileNameEl = document.getElementById("profile-name");
 
 let servicos = [];
 let servicoEmEdicao = null;
+let fotoServico = null;
+
+function mostrarFotoServico(foto) {
+  fotoServicoPreviewEl.src = foto || "";
+  fotoServicoPreviewEl.style.display = foto ? "block" : "none";
+}
+
+function redimensionarFotoServico(arquivo) {
+  return new Promise((resolve, reject) => {
+    const leitor = new FileReader();
+    leitor.onerror = () => reject(new Error("Não foi possível ler a imagem."));
+    leitor.onload = () => {
+      const imagem = new Image();
+      imagem.onerror = () => reject(new Error("Arquivo de imagem inválido."));
+      imagem.onload = () => {
+        const escala = Math.min(1, 900 / Math.max(imagem.width, imagem.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(imagem.width * escala);
+        canvas.height = Math.round(imagem.height * escala);
+        const contexto = canvas.getContext("2d");
+        if (!contexto) {
+          reject(new Error("Não foi possível processar a imagem."));
+          return;
+        }
+        contexto.drawImage(imagem, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.82));
+      };
+      imagem.src = leitor.result;
+    };
+    leitor.readAsDataURL(arquivo);
+  });
+}
 
 function escaparHtml(valor) {
   const div = document.createElement("div");
@@ -86,6 +120,9 @@ function abrirModalServico(id = null) {
   nomeServicoEl.value = servicoEmEdicao?.nome || "";
   valorServicoEl.value = servicoEmEdicao?.valor ?? "";
   duracaoServicoEl.value = servicoEmEdicao?.duracaoMinutos ?? "";
+  fotoServico = servicoEmEdicao?.foto || null;
+  fotoServicoEl.value = "";
+  mostrarFotoServico(fotoServico);
   erroServicoEl.textContent = "";
   modalServicoEl.style.display = "flex";
   nomeServicoEl.focus();
@@ -94,6 +131,9 @@ function abrirModalServico(id = null) {
 function fecharModalServico() {
   modalServicoEl.style.display = "none";
   servicoEmEdicao = null;
+  fotoServico = null;
+  fotoServicoEl.value = "";
+  mostrarFotoServico("");
 }
 
 async function carregarServicos() {
@@ -130,7 +170,15 @@ formServicoEl.addEventListener("submit", async (event) => {
     nome: nomeServicoEl.value.trim(),
     valor: Number(valorServicoEl.value),
     duracaoMinutos: Number(duracaoServicoEl.value),
+    foto: fotoServico,
   };
+
+  if (!payload.foto) {
+    erroServicoEl.textContent = "Adicione uma foto para o serviço.";
+    btnSalvarServicoEl.disabled = false;
+    btnSalvarServicoEl.textContent = "Salvar";
+    return;
+  }
 
   try {
     const endpoint = servicoEmEdicao
@@ -142,7 +190,8 @@ formServicoEl.addEventListener("submit", async (event) => {
     });
 
     if (!resposta || !resposta.ok) {
-      throw new Error("Não foi possível salvar o serviço.");
+      const erro = resposta ? await resposta.json().catch(() => ({})) : {};
+      throw new Error(erro.erro || "Não foi possível salvar o serviço.");
     }
 
     fecharModalServico();
@@ -165,6 +214,22 @@ modalServicoEl.addEventListener("click", (event) => {
   if (event.target === modalServicoEl) fecharModalServico();
 });
 buscaServicoEl.addEventListener("input", renderizarServicos);
+fotoServicoEl.addEventListener("change", async () => {
+  erroServicoEl.textContent = "";
+  const arquivo = fotoServicoEl.files[0];
+  if (!arquivo) return;
+
+  try {
+    if (!["image/png", "image/jpeg", "image/webp"].includes(arquivo.type)) {
+      throw new Error("Use uma imagem PNG, JPEG ou WEBP.");
+    }
+    fotoServico = await redimensionarFotoServico(arquivo);
+    mostrarFotoServico(fotoServico);
+  } catch (error) {
+    fotoServicoEl.value = "";
+    erroServicoEl.textContent = error.message;
+  }
+});
 document.getElementById("btn-logout").addEventListener("click", (event) => {
   event.preventDefault();
   localStorage.removeItem("token");

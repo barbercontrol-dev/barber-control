@@ -50,6 +50,7 @@
         try {
             fotoNova = await redimensionar(arquivo);
             mostrarFoto(fotoNova);
+            window.atualizarFotoSidebar?.(fotoNova);
         } catch (erro) {
             msgEl.textContent = erro.message;
         }
@@ -59,6 +60,7 @@
         fotoNova = "";
         fotoEl.value = "";
         mostrarFoto("");
+        window.atualizarFotoSidebar?.("");
     });
 
     formEl.addEventListener("submit", async (event) => {

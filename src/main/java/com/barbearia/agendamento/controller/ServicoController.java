@@ -9,11 +9,16 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/servicos")
 public class ServicoController {
+
+    private static final Pattern FOTO_VALIDA = Pattern.compile("^data:image/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$");
+    private static final int TAMANHO_MAXIMO_FOTO = 2_800_000;
 
     @Autowired
     private ServicoService servicoService;
@@ -22,8 +27,12 @@ public class ServicoController {
     private ContextoUsuario contexto;
 
     @PostMapping
-    public Servico criarServico(@RequestBody Servico servico, Authentication authentication) {
-        return servicoService.criarServico(servico, contexto.de(authentication).barbeariaId());
+    public ResponseEntity<?> criarServico(@RequestBody Servico servico, Authentication authentication) {
+        if (!fotoValida(servico.getFoto())) {
+            return erroFoto();
+        }
+        return ResponseEntity.ok(
+                servicoService.criarServico(servico, contexto.de(authentication).barbeariaId()));
     }
 
     @GetMapping
@@ -37,9 +46,20 @@ public class ServicoController {
     }
 
     @PutMapping("/{id}")
-    public Servico atualizarServico(@PathVariable Long id, @RequestBody Servico servicoAtualizado,
-                                    Authentication authentication) {
-        return servicoService.atualizarServico(id, servicoAtualizado, contexto.de(authentication).barbeariaId());
+    public ResponseEntity<?> atualizarServico(@PathVariable Long id, @RequestBody Servico servicoAtualizado,
+                                               Authentication authentication) {
+        Long barbeariaId = contexto.de(authentication).barbeariaId();
+        Optional<Servico> existente = servicoService.buscarPorId(id, barbeariaId);
+        if (existente.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        if (servicoAtualizado.getFoto() != null && !fotoValida(servicoAtualizado.getFoto())) {
+            return erroFoto();
+        }
+        if (servicoAtualizado.getFoto() == null && existente.get().getFoto() == null) {
+            return erroFoto();
+        }
+        return ResponseEntity.ok(servicoService.atualizarServico(id, servicoAtualizado, barbeariaId));
     }
 
     @DeleteMapping("/{id}")
@@ -47,5 +67,14 @@ public class ServicoController {
         return servicoService.deletarServico(id, contexto.de(authentication).barbeariaId())
                 ? ResponseEntity.noContent().build()
                 : ResponseEntity.notFound().build();
+    }
+
+    private boolean fotoValida(String foto) {
+        return foto != null && foto.length() <= TAMANHO_MAXIMO_FOTO && FOTO_VALIDA.matcher(foto).matches();
+    }
+
+    private ResponseEntity<Map<String, String>> erroFoto() {
+        return ResponseEntity.badRequest().body(Map.of(
+                "erro", "A foto é obrigatória. Envie uma imagem PNG, JPEG ou WEBP de até 2 MB."));
     }
 }
