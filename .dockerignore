@@ -1,5 +1,4 @@
-.git
-.gitignore
-target
-Frontend
-*.log
+target/
+.git/
+.idea/
+*.iml
